@@ -1,0 +1,1448 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Clear Search"
+msgstr "Effacer la recherche"
+
+msgid "Undo"
+msgstr "Annuler"
+
+msgid "Redo"
+msgstr "Rétablir"
+
+msgid "Cut"
+msgstr "Couper"
+
+msgid "Copy"
+msgstr "Copier"
+
+msgid "Paste"
+msgstr "Coller"
+
+msgid "Select All"
+msgstr "Tout sélectionner"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Minimize"
+msgstr "Réduire"
+
+msgid "Hide next to the clock"
+msgstr "Masquer près de l'horloge"
+
+msgid "{} downloads selected"
+msgstr "{} téléchargements sélectionnés"
+
+msgid "Open"
+msgstr "Ouvrir"
+
+msgid "Show download progress"
+msgstr "Afficher la progression"
+
+msgid "Open with…"
+msgstr "Ouvrir avec…"
+
+msgid "Play while downloading"
+msgstr "Lire pendant le téléchargement"
+
+msgid "Show in Finder"
+msgstr "Afficher dans le Finder"
+
+msgid "Open folder"
+msgstr "Ouvrir le dossier"
+
+msgid "Resume download"
+msgstr "Reprendre le téléchargement"
+
+msgid "Stop download"
+msgstr "Arrêter le téléchargement"
+
+msgid "Redownload"
+msgstr "Retélécharger"
+
+msgid "Refresh download address…"
+msgstr "Actualiser l'adresse de téléchargement…"
+
+msgid "Move / Rename…"
+msgstr "Déplacer / Renommer…"
+
+msgid "Move to queue"
+msgstr "Déplacer vers la file"
+
+msgid "Delete from queue"
+msgstr "Retirer de la file"
+
+msgid "Copy address"
+msgstr "Copier l'adresse"
+
+msgid "Check file (SHA-256)"
+msgstr "Vérifier le fichier (SHA-256)"
+
+msgid "Properties"
+msgstr "Propriétés"
+
+msgid "Remove"
+msgstr "Supprimer"
+
+msgid "Paused"
+msgstr "En pause"
+
+msgid "Show in folder"
+msgstr "Afficher dans le dossier"
+
+msgid "Try Again"
+msgstr "Réessayer"
+
+msgid "Pause"
+msgstr "Pause"
+
+msgid "Resume"
+msgstr "Reprendre"
+
+msgid "Start queue"
+msgstr "Démarrer la file"
+
+msgid "Stop queue"
+msgstr "Arrêter la file"
+
+msgid "Edit queue / schedule…"
+msgstr "Modifier la file / la planification…"
+
+msgid "New queue…"
+msgstr "Nouvelle file…"
+
+msgid "Delete queue"
+msgstr "Supprimer la file"
+
+msgid "Add category…"
+msgstr "Ajouter une catégorie…"
+
+msgid "Properties…"
+msgstr "Propriétés…"
+
+msgid "Delete category"
+msgstr "Supprimer la catégorie"
+
+msgid "Mac Downloader"
+msgstr "Mac Downloader"
+
+msgid "All Downloads"
+msgstr "Tous les téléchargements"
+
+msgid "Unfinished"
+msgstr "Non terminés"
+
+msgid "Finished"
+msgstr "Terminés"
+
+msgid "File Name"
+msgstr "Nom du fichier"
+
+msgid "Q"
+msgstr "F"
+
+msgid "Size"
+msgstr "Taille"
+
+msgid "Status"
+msgstr "État"
+
+msgid "Time left"
+msgstr "Temps restant"
+
+msgid "Transfer rate"
+msgstr "Débit"
+
+msgid "Last Try Date"
+msgstr "Dernier essai"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Date Added"
+msgstr "Date d'ajout"
+
+msgid "Save To"
+msgstr "Enregistrer dans"
+
+msgid "Referer"
+msgstr "Référent"
+
+msgid "Parent Web Page"
+msgstr "Page web d'origine"
+
+msgid "Tasks"
+msgstr "Tâches"
+
+msgid "Add new download…"
+msgstr "Ajouter un téléchargement…"
+
+msgid "Add batch download…"
+msgstr "Ajouter un téléchargement groupé…"
+
+msgid "Add batch download from clipboard"
+msgstr "Ajouter un téléchargement groupé depuis le presse-papiers"
+
+msgid "Run site grabber…"
+msgstr "Lancer l'aspirateur de site…"
+
+msgid "Download a playlist…"
+msgstr "Télécharger une playlist…"
+
+msgid "Add a torrent / magnet link…"
+msgstr "Ajouter un torrent / lien magnet…"
+
+msgid "Export"
+msgstr "Exporter"
+
+msgid "To download list file (.ef2)…"
+msgstr "Vers un fichier de liste (.ef2)…"
+
+msgid "To text file…"
+msgstr "Vers un fichier texte…"
+
+msgid "Import"
+msgstr "Importer"
+
+msgid "From download list file (.ef2)…"
+msgstr "Depuis un fichier de liste (.ef2)…"
+
+msgid "From text file…"
+msgstr "Depuis un fichier texte…"
+
+msgid "Open download folder"
+msgstr "Ouvrir le dossier des téléchargements"
+
+msgid "Quit Mac Downloader"
+msgstr "Quitter Mac Downloader"
+
+msgid "Exit"
+msgstr "Quitter"
+
+msgid "File"
+msgstr "Fichier"
+
+msgid "Download now"
+msgstr "Télécharger maintenant"
+
+msgid "Downloads"
+msgstr "Téléchargements"
+
+msgid "Resume all"
+msgstr "Tout reprendre"
+
+msgid "Stop all"
+msgstr "Tout arrêter"
+
+msgid "Delete all completed"
+msgstr "Supprimer tous les terminés"
+
+msgid "Find…"
+msgstr "Rechercher…"
+
+msgid "Find next   F3"
+msgstr "Rechercher le suivant   F3"
+
+msgid "Speed Limiter"
+msgstr "Limiteur de vitesse"
+
+msgid "Turn on"
+msgstr "Activer"
+
+msgid "Turn off"
+msgstr "Désactiver"
+
+msgid "Settings…"
+msgstr "Paramètres…"
+
+msgid "When all downloads finish"
+msgstr "Quand tous les téléchargements sont terminés"
+
+msgid "Do nothing"
+msgstr "Ne rien faire"
+
+msgid "Shut down the computer"
+msgstr "Éteindre l'ordinateur"
+
+msgid "Sleep"
+msgstr "Mettre en veille"
+
+msgid "Hibernate"
+msgstr "Mettre en veille prolongée"
+
+msgid "Exit Mac Downloader"
+msgstr "Quitter Mac Downloader"
+
+msgid "Scheduler…"
+msgstr "Planificateur…"
+
+msgid "View"
+msgstr "Affichage"
+
+msgid "Show Sidebar"
+msgstr "Afficher la barre latérale"
+
+msgid "Hide Sidebar"
+msgstr "Masquer la barre latérale"
+
+msgid "Arrange files"
+msgstr "Trier les fichiers"
+
+msgid "By order of addition"
+msgstr "Par ordre d'ajout"
+
+msgid "File name"
+msgstr "Nom du fichier"
+
+msgid "Last try date"
+msgstr "Dernier essai"
+
+msgid "Save to"
+msgstr "Enregistrer dans"
+
+msgid "Parent web page"
+msgstr "Page web d'origine"
+
+msgid "Download List"
+msgstr "Liste des téléchargements"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "Details"
+msgstr "Détails"
+
+msgid "Columns…"
+msgstr "Colonnes…"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Appearance"
+msgstr "Apparence"
+
+msgid "System"
+msgstr "Système"
+
+msgid "Light"
+msgstr "Clair"
+
+msgid "Dark"
+msgstr "Sombre"
+
+msgid "Appearance…"
+msgstr "Apparence…"
+
+msgid "Help"
+msgstr "Aide"
+
+msgid "Add Mac Downloader to my browser…"
+msgstr "Ajouter Mac Downloader à mon navigateur…"
+
+msgid "Tip of the day…"
+msgstr "Astuce du jour…"
+
+msgid "Check for updates"
+msgstr "Rechercher des mises à jour"
+
+msgid "Check for updates (video downloader)"
+msgstr "Rechercher des mises à jour (téléchargeur vidéo)"
+
+msgid "About Mac Downloader"
+msgstr "À propos de Mac Downloader"
+
+msgid "Speed Limiter: On"
+msgstr "Limiteur de vitesse : activé"
+
+msgid "Speed Limiter: Off"
+msgstr "Limiteur de vitesse : désactivé"
+
+msgid "Compact List"
+msgstr "Liste compacte"
+
+msgid "Details View"
+msgstr "Vue détaillée"
+
+msgid "Sidebar"
+msgstr "Barre latérale"
+
+msgid "Library"
+msgstr "Bibliothèque"
+
+msgid "File Types"
+msgstr "Types de fichiers"
+
+msgid "Queues"
+msgstr "Files d'attente"
+
+msgid "New queue"
+msgstr "Nouvelle file"
+
+msgid "Toolbar"
+msgstr "Barre d'outils"
+
+msgid "{} selected"
+msgstr "{} sélectionnés"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "New Download…"
+msgstr "Nouveau téléchargement…"
+
+msgid "More Actions"
+msgstr "Autres actions"
+
+msgid "No Matches"
+msgstr "Aucun résultat"
+
+msgid "No Downloads Yet"
+msgstr "Aucun téléchargement"
+
+msgid "Nothing Here"
+msgstr "Rien ici"
+
+msgid "Nothing matches “{}”."
+msgstr "Rien ne correspond à « {} »."
+
+msgid "Add a link or send a download from your browser."
+msgstr "Ajoutez un lien ou envoyez un téléchargement depuis votre navigateur."
+
+msgid "Downloads in this list appear here."
+msgstr "Les téléchargements de cette liste apparaissent ici."
+
+msgid "Connect Browser…"
+msgstr "Connecter le navigateur…"
+
+msgid "New Download"
+msgstr "Nouveau téléchargement"
+
+msgid "Paste a link, then check it"
+msgstr "Collez un lien, puis vérifiez-le"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Download link"
+msgstr "Lien de téléchargement"
+
+msgid "Check"
+msgstr "Vérifier"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Save location"
+msgstr "Emplacement d’enregistrement"
+
+msgid "Change…"
+msgstr "Modifier…"
+
+msgid "Checking the file…"
+msgstr "Vérification du fichier…"
+
+msgid "Couldn’t check this file. Check the link or try downloading again."
+msgstr "Impossible de vérifier ce fichier. Vérifiez le lien ou réessayez le téléchargement."
+
+msgid "Download with the browser"
+msgstr "Télécharger avec le navigateur"
+
+msgid "Options"
+msgstr "Options"
+
+msgid "Category"
+msgstr "Catégorie"
+
+msgid "Queue"
+msgstr "File"
+
+msgid "Full path"
+msgstr "Chemin complet"
+
+msgid "Save As"
+msgstr "Enregistrer sous"
+
+msgid "Remember this path for \"{}\" category"
+msgstr "Mémoriser ce chemin pour la catégorie \"{}\""
+
+msgid "optional note"
+msgstr "note facultative"
+
+msgid "Connections"
+msgstr "Connexions"
+
+msgid "Use authorization"
+msgstr "Utiliser une authentification"
+
+msgid "Login"
+msgstr "Identifiant"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Download Later"
+msgstr "Télécharger plus tard"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Download"
+msgstr "Télécharger"
+
+msgid "Add batch download"
+msgstr "Téléchargement groupé"
+
+msgid "List of links"
+msgstr "Liste de liens"
+
+msgid "Address with a pattern (*)"
+msgstr "Adresse avec un modèle (*)"
+
+msgid "Paste the links, one per line. They download one after another in the queue you choose."
+msgstr "Collez les liens, un par ligne. Ils sont téléchargés l'un après l'autre dans la file choisie."
+
+msgid "Paste from clipboard"
+msgstr "Coller depuis le presse-papiers"
+
+msgid "Type an address with a * where the number (or letter) goes, for example\nhttps://www.site.com/pictures/img*.jpg"
+msgstr "Tapez une adresse avec un * à la place du numéro (ou de la lettre), par exemple\nhttps://www.site.com/pictures/img*.jpg"
+
+msgid "https://www.site.com/pictures/img*.jpg"
+msgstr "https://www.site.com/pictures/img*.jpg"
+
+msgid "From"
+msgstr "De"
+
+msgid "To"
+msgstr "À"
+
+msgid "Wildcard size"
+msgstr "Largeur du joker"
+
+msgid "Letters (a-z) instead of numbers"
+msgstr "Lettres (a-z) au lieu de chiffres"
+
+msgid "Wildcard size 3 makes 001, 002 … 010."
+msgstr "Une largeur de 3 donne 001, 002 … 010."
+
+msgid "optional"
+msgstr "facultatif"
+
+msgid "Save all to"
+msgstr "Tout enregistrer dans"
+
+msgid "automatic (by file type)"
+msgstr "automatique (selon le type de fichier)"
+
+msgid "Choose…"
+msgstr "Choisir…"
+
+msgid "Start the queue now"
+msgstr "Démarrer la file maintenant"
+
+msgid "Add"
+msgstr "Ajouter"
+
+msgid "{} of {}"
+msgstr "{} sur {}"
+
+msgid "{} downloaded"
+msgstr "{} téléchargés"
+
+msgid "Download Progress"
+msgstr "Progression du téléchargement"
+
+msgid "{} left"
+msgstr "{} restant"
+
+msgid "Speed Limit"
+msgstr "Limite de vitesse"
+
+msgid "When Finished"
+msgstr "À la fin"
+
+msgid "Resume capability"
+msgstr "Reprise possible"
+
+msgid "Start positions and download progress by connections"
+msgstr "Positions de départ et progression par connexion"
+
+msgid "N."
+msgstr "N°"
+
+msgid "Downloaded"
+msgstr "Téléchargé"
+
+msgid "Info"
+msgstr "Infos"
+
+msgid "Use speed limiter for this download"
+msgstr "Limiter la vitesse de ce téléchargement"
+
+msgid "Maximum download speed (KB/s)"
+msgstr "Vitesse maximale (Ko/s)"
+
+msgid "{} MB/s"
+msgstr "{} Mo/s"
+
+msgid "{} KB/s"
+msgstr "{} Ko/s"
+
+msgid "Changes apply right away, even while downloading."
+msgstr "Les changements s'appliquent tout de suite, même pendant le téléchargement."
+
+msgid "When this download completes:"
+msgstr "Quand ce téléchargement est terminé :"
+
+msgid "Do nothing (keep the computer on)"
+msgstr "Ne rien faire (laisser l'ordinateur allumé)"
+
+msgid "Force programs to close when shutting down"
+msgstr "Forcer la fermeture des programmes à l'extinction"
+
+msgid "Show the \"Download complete\" window"
+msgstr "Afficher la fenêtre \"Téléchargement terminé\""
+
+msgid "You get 30 seconds to cancel before the computer shuts down, sleeps or hibernates."
+msgstr "Vous avez 30 secondes pour annuler avant que l'ordinateur s'éteigne ou se mette en veille."
+
+msgid "Hide"
+msgstr "Masquer"
+
+msgid "Download complete"
+msgstr "Téléchargement terminé"
+
+msgid "Saved as"
+msgstr "Enregistré sous"
+
+msgid "Don't show this again"
+msgstr "Ne plus afficher"
+
+msgid "Columns"
+msgstr "Colonnes"
+
+msgid "Show these columns in the download list:"
+msgstr "Afficher ces colonnes dans la liste :"
+
+msgid "Q (queue number)"
+msgstr "F (numéro de file)"
+
+msgid "File Name (always shown)"
+msgstr "Nom du fichier (toujours affiché)"
+
+msgid "Reset"
+msgstr "Réinitialiser"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Add category"
+msgstr "Ajouter une catégorie"
+
+msgid "Category properties"
+msgstr "Propriétés de la catégorie"
+
+msgid "Files with these extensions, or from these sites, are put into this category and saved to its folder."
+msgstr "Les fichiers avec ces extensions, ou venant de ces sites, vont dans cette catégorie et dans son dossier."
+
+msgid "Category name"
+msgstr "Nom de la catégorie"
+
+msgid "e.g. Courses"
+msgstr "ex. Cours"
+
+msgid "File types"
+msgstr "Types de fichiers"
+
+msgid "mp4 mkv avi (separated by spaces)"
+msgstr "mp4 mkv avi (séparés par des espaces)"
+
+msgid "Sites"
+msgstr "Sites"
+
+msgid "udemy.com *.coursera.org (optional)"
+msgstr "udemy.com *.coursera.org (facultatif)"
+
+msgid "Save files to"
+msgstr "Enregistrer les fichiers dans"
+
+msgid "automatic (Downloads/{})"
+msgstr "automatique (Téléchargements/{})"
+
+msgid "automatic (Downloads\\{})"
+msgstr "automatique (Téléchargements\\{})"
+
+msgid "Find file"
+msgstr "Rechercher un fichier"
+
+msgid "Find what"
+msgstr "Rechercher"
+
+msgid "Look in"
+msgstr "Chercher dans"
+
+msgid "Address, referer and parent web page"
+msgstr "Adresse, référent et page web d'origine"
+
+msgid "Match case"
+msgstr "Respecter la casse"
+
+msgid "Match whole string"
+msgstr "Chaîne entière"
+
+msgid "Find Next"
+msgstr "Suivant"
+
+msgid "File Properties – {}"
+msgstr "Propriétés du fichier – {}"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Date added"
+msgstr "Date d'ajout"
+
+msgid "Use authorization (server login)"
+msgstr "Utiliser une authentification (connexion au serveur)"
+
+msgid "Result: {}"
+msgstr "Résultat : {}"
+
+msgid "Duplicate download link"
+msgstr "Lien de téléchargement en double"
+
+msgid "This address is already in the download list:"
+msgstr "Cette adresse est déjà dans la liste des téléchargements :"
+
+msgid "Add it with a new name (numbered)"
+msgstr "L'ajouter avec un nouveau nom (numéroté)"
+
+msgid "Add it and replace the old download (overwrite the file)"
+msgstr "L'ajouter et remplacer l'ancien téléchargement (écraser le fichier)"
+
+msgid "If it is finished show it, if not resume it"
+msgstr "S'il est terminé l'afficher, sinon le reprendre"
+
+msgid "Remember my choice (Options > Downloads)"
+msgstr "Mémoriser mon choix (Options > Téléchargements)"
+
+msgid "All downloads are finished."
+msgstr "Tous les téléchargements sont terminés."
+
+msgid "Mac Downloader will {} in {} seconds."
+msgstr "Mac Downloader va {} dans {} secondes."
+
+msgid "Now"
+msgstr "Maintenant"
+
+msgid "Stop"
+msgstr "Arrêter"
+
+msgid "Scheduler"
+msgstr "Planificateur"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Queue name"
+msgstr "Nom de la file"
+
+msgid "Schedule"
+msgstr "Planification"
+
+msgid "Files in the queue"
+msgstr "Fichiers de la file"
+
+msgid "Start the queue automatically"
+msgstr "Démarrer la file automatiquement"
+
+msgid "Start time (HH:MM)"
+msgstr "Heure de début (HH:MM)"
+
+msgid "Daily"
+msgstr "Chaque jour"
+
+msgid "Once at (YYYY-MM-DD)"
+msgstr "Une fois le (AAAA-MM-JJ)"
+
+msgid "Mon"
+msgstr "Lun"
+
+msgid "Tue"
+msgstr "Mar"
+
+msgid "Wed"
+msgstr "Mer"
+
+msgid "Thu"
+msgstr "Jeu"
+
+msgid "Fri"
+msgstr "Ven"
+
+msgid "Sat"
+msgstr "Sam"
+
+msgid "Sun"
+msgstr "Dim"
+
+msgid "Start the queue when Mac Downloader starts"
+msgstr "Démarrer la file au lancement de Mac Downloader"
+
+msgid "Stop the queue at"
+msgstr "Arrêter la file à"
+
+msgid "When the queue is done"
+msgstr "Quand la file est terminée"
+
+msgid "For Sleep you may need to allow wake timers in the Windows power options, so the computer can wake up for the next start."
+msgstr "Pour la veille, il faut peut-être autoriser les minuteurs de réveil dans les options d'alimentation de Windows, pour que l'ordinateur se réveille au prochain démarrage."
+
+msgid "Move up"
+msgstr "Monter"
+
+msgid "Move down"
+msgstr "Descendre"
+
+msgid "Files download in this order. Add files with right click > Move to queue, Add Batch, or \"Download Later\"."
+msgstr "Les fichiers sont téléchargés dans cet ordre. Ajoutez des fichiers par clic droit > Déplacer vers la file, Ajout groupé ou \"Télécharger plus tard\"."
+
+msgid "Files at the same time"
+msgstr "Fichiers en même temps"
+
+msgid "Number of retries for each file if downloading failed"
+msgstr "Nombre d'essais par fichier en cas d'échec"
+
+msgid "Open each file when it has finished downloading"
+msgstr "Ouvrir chaque fichier une fois téléchargé"
+
+msgid "Save all files of this queue to"
+msgstr "Enregistrer tous les fichiers de cette file dans"
+
+msgid "Start now"
+msgstr "Démarrer maintenant"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Download all links"
+msgstr "Télécharger tous les liens"
+
+msgid "Site Grabber"
+msgstr "Aspirateur de site"
+
+msgid "https://example.com/gallery/"
+msgstr "https://example.com/gallery/"
+
+msgid "Start page"
+msgstr "Page de départ"
+
+msgid "Start exploring"
+msgstr "Lancer l'exploration"
+
+msgid "Get"
+msgstr "Récupérer"
+
+msgid "All files (not web pages)"
+msgstr "Tous les fichiers (pas les pages web)"
+
+msgid "All images"
+msgstr "Toutes les images"
+
+msgid "All videos"
+msgstr "Toutes les vidéos"
+
+msgid "All music / audio"
+msgstr "Toute la musique / l'audio"
+
+msgid "Archives and programs"
+msgstr "Archives et programmes"
+
+msgid "Documents (PDF, Office)"
+msgstr "Documents (PDF, Office)"
+
+msgid "Custom file types"
+msgstr "Types de fichiers personnalisés"
+
+msgid "jpg png mp4 (custom types)"
+msgstr "jpg png mp4 (types personnalisés)"
+
+msgid "Levels to explore"
+msgstr "Niveaux à explorer"
+
+msgid "Pages at the same time"
+msgstr "Pages en même temps"
+
+msgid "Other sites too"
+msgstr "Autres sites aussi"
+
+msgid "Don't go to parent folders"
+msgstr "Ne pas remonter aux dossiers parents"
+
+msgid "All types"
+msgstr "Tous les types"
+
+msgid "Images"
+msgstr "Images"
+
+msgid "Videos"
+msgstr "Vidéos"
+
+msgid "Music"
+msgstr "Musique"
+
+msgid "Archives / programs"
+msgstr "Archives / programmes"
+
+msgid "Documents"
+msgstr "Documents"
+
+msgid "Web pages"
+msgstr "Pages web"
+
+msgid "Filter by name or address…"
+msgstr "Filtrer par nom ou adresse…"
+
+msgid "Check all"
+msgstr "Tout cocher"
+
+msgid "Uncheck all"
+msgstr "Tout décocher"
+
+msgid "Link text"
+msgstr "Texte du lien"
+
+msgid "No links on this page."
+msgstr "Aucun lien sur cette page."
+
+msgid "Exploring…"
+msgstr "Exploration…"
+
+msgid "Type a start page and click \"Start exploring\"."
+msgstr "Tapez une page de départ et cliquez sur \"Lancer l'exploration\"."
+
+msgid "Use link texts as descriptions"
+msgstr "Utiliser le texte des liens comme description"
+
+msgid "Download checked"
+msgstr "Télécharger la sélection"
+
+msgid "Tip of the day"
+msgstr "Astuce du jour"
+
+msgid "Did you know…"
+msgstr "Le saviez-vous…"
+
+msgid "Show tips at startup"
+msgstr "Afficher les astuces au démarrage"
+
+msgid "Next tip"
+msgstr "Astuce suivante"
+
+msgid "Refresh download address"
+msgstr "Actualiser l'adresse de téléchargement"
+
+msgid "1. Open the web page where you got this file.\n2. Click the download link there again (or start the video).\n3. Mac Downloader takes the new address and continues from where it stopped."
+msgstr "1. Ouvrez la page web d'où vient ce fichier.\n2. Cliquez à nouveau sur le lien de téléchargement (ou lancez la vidéo).\n3. Mac Downloader prend la nouvelle adresse et continue là où il s'était arrêté."
+
+msgid "Open the page"
+msgstr "Ouvrir la page"
+
+msgid "Waiting for the new address from the browser…"
+msgstr "En attente de la nouvelle adresse du navigateur…"
+
+msgid "Or paste the new address here:"
+msgstr "Ou collez la nouvelle adresse ici :"
+
+msgid "https://…"
+msgstr "https://…"
+
+msgid "Use it"
+msgstr "Utiliser"
+
+msgid "Stop waiting"
+msgstr "Ne plus attendre"
+
+msgid "No sound"
+msgstr "Aucun son"
+
+msgid "Play"
+msgstr "Lire"
+
+msgid "Settings"
+msgstr "Réglages"
+
+msgid "Launch Mac Downloader on Windows startup"
+msgstr "Lancer Mac Downloader au démarrage de Windows"
+
+msgid "Keep running next to the clock when the window is closed"
+msgstr "Rester à côté de l'horloge quand la fenêtre est fermée"
+
+msgid "General"
+msgstr "Général"
+
+msgid "Connection"
+msgstr "Connexion"
+
+msgid "Proxy / Server"
+msgstr "Proxy / Serveur"
+
+msgid "Site Logins"
+msgstr "Identifiants de sites"
+
+msgid "Sounds"
+msgstr "Sons"
+
+msgid "Torrents"
+msgstr "Torrents"
+
+msgid "Option"
+msgstr "Option"
+
+msgid "Control"
+msgstr "Contrôle"
+
+msgid "Shift"
+msgstr "Maj"
+
+msgid "None"
+msgstr "Aucune"
+
+msgid "Alt"
+msgstr "Alt"
+
+msgid "Ctrl"
+msgstr "Ctrl"
+
+msgid "Clipboard"
+msgstr "Presse-papiers"
+
+msgid "Watch the clipboard for download links"
+msgstr "Surveiller le presse-papiers pour les liens de téléchargement"
+
+msgid "Automatically start downloading links placed in the clipboard"
+msgstr "Démarrer automatiquement les liens copiés dans le presse-papiers"
+
+msgid "On double click on a download"
+msgstr "Double-clic sur un téléchargement"
+
+msgid "Open the file / progress window"
+msgstr "Ouvrir le fichier / la fenêtre de progression"
+
+msgid "Show properties"
+msgstr "Afficher les propriétés"
+
+msgid "Show \"Tip of the day\" at startup"
+msgstr "Afficher \"l'Astuce du jour\" au démarrage"
+
+msgid "Browser integration"
+msgstr "Intégration au navigateur"
+
+msgid "Browser Extension Setup"
+msgstr "Configuration de l’extension du navigateur"
+
+msgid "Use the setup assistant to connect your browser. It prepares the extension, opens the right page, and checks the connection."
+msgstr "Utilisez l’assistant pour connecter votre navigateur. Il prépare l’extension, ouvre la bonne page et vérifie la connexion."
+
+msgid "Set Up…"
+msgstr "Configurer…"
+
+msgid "Hold this key to let the browser download by itself"
+msgstr "Maintenir cette touche pour laisser le navigateur télécharger lui-même"
+
+msgid "Hold this key to force Mac Downloader to take a link"
+msgstr "Maintenir cette touche pour forcer Mac Downloader à prendre un lien"
+
+msgid "Browser extension port"
+msgstr "Port de l'extension du navigateur"
+
+msgid "System follows your Mac's Light or Dark appearance automatically."
+msgstr "Système suit automatiquement l’apparence claire ou sombre de votre Mac."
+
+msgid "Text size"
+msgstr "Taille du texte"
+
+msgid "Font"
+msgstr "Police"
+
+msgid "System Font"
+msgstr "Police du système"
+
+msgid "Window opacity"
+msgstr "Opacité de la fenêtre"
+
+msgid "Background picture"
+msgstr "Image d'arrière-plan"
+
+msgid "none (the theme's colors)"
+msgstr "aucune (couleurs du thème)"
+
+msgid "Picture visibility"
+msgstr "Visibilité de l'image"
+
+msgid "Browser downloads"
+msgstr "Téléchargements du navigateur"
+
+msgid "Automatically start downloading these file types (from the browser):"
+msgstr "Démarrer automatiquement le téléchargement de ces types (depuis le navigateur) :"
+
+msgid "Default"
+msgstr "Par défaut"
+
+msgid "Don't start downloading automatically from these sites:"
+msgstr "Ne pas démarrer automatiquement depuis ces sites :"
+
+msgid "*.update.microsoft.com  windowsupdate.com"
+msgstr "*.update.microsoft.com  windowsupdate.com"
+
+msgid "Don't start downloading these addresses (one per line, * allowed):"
+msgstr "Ne pas télécharger ces adresses (une par ligne, * autorisé) :"
+
+msgid "Video button"
+msgstr "Bouton vidéo"
+
+msgid "Show the \"Download this video\" panel on web players"
+msgstr "Afficher le panneau \"Télécharger cette vidéo\" sur les lecteurs web"
+
+msgid "Don't show it on these sites"
+msgstr "Ne pas l'afficher sur ces sites"
+
+msgid "Smallest video (KB)"
+msgstr "Vidéo minimale (Ko)"
+
+msgid "Smallest audio (KB)"
+msgstr "Audio minimal (Ko)"
+
+msgid "Main download folder"
+msgstr "Dossier principal des téléchargements"
+
+msgid "Sort files into folders by category (Video, Music, Programs, Compressed, Documents, Images…)"
+msgstr "Classer les fichiers dans des dossiers par catégorie (Vidéo, Musique, Programmes, Compressés, Documents, Images…)"
+
+msgid "Each category's own folder and file types: right click it in the sidebar > Properties."
+msgstr "Dossier et types de fichiers de chaque catégorie : clic droit dessus dans la barre latérale > Propriétés."
+
+msgid "Remembered category paths"
+msgstr "Chemins de catégories mémorisés"
+
+msgid "Forget remembered category paths"
+msgstr "Oublier les chemins mémorisés des catégories"
+
+msgid "Tip: a temporary folder on another drive than the download folder makes joining the parts faster."
+msgstr "Astuce : un dossier temporaire sur un autre disque que celui des téléchargements rend l'assemblage plus rapide."
+
+msgid "Temporary folder (parts while downloading)"
+msgstr "Dossier temporaire (morceaux pendant le téléchargement)"
+
+msgid "next to the file (default)"
+msgstr "à côté du fichier (par défaut)"
+
+msgid "Show the \"Download File Info\" window for downloads from the browser"
+msgstr "Afficher la fenêtre \"Informations sur le fichier\" pour les téléchargements du navigateur"
+
+msgid "Start downloading immediately while showing \"Download File Info\""
+msgstr "Démarrer le téléchargement tout de suite en affichant \"Informations sur le fichier\""
+
+msgid "Background progress window"
+msgstr "Fenêtre de progression en arrière-plan"
+
+msgid "When Downloads Is Hidden"
+msgstr "Quand Téléchargements est masqué"
+
+msgid "Minimized"
+msgstr "Réduite"
+
+msgid "Don't Show"
+msgstr "Ne pas afficher"
+
+msgid "If a duplicate link is added"
+msgstr "Si un lien en double est ajouté"
+
+msgid "Ask me"
+msgstr "Me demander"
+
+msgid "Add it with a numbered file name"
+msgstr "L'ajouter avec un nom numéroté"
+
+msgid "Add it and replace the old download"
+msgstr "L'ajouter et remplacer l'ancien téléchargement"
+
+msgid "Show the finished one / resume the unfinished one"
+msgstr "Afficher le terminé / reprendre le non terminé"
+
+msgid "Give finished files the date from the server"
+msgstr "Donner aux fichiers terminés la date du serveur"
+
+msgid "Malware check"
+msgstr "Analyse antimalware"
+
+msgid "[File] is replaced by the downloaded file."
+msgstr "[File] est remplacé par le fichier téléchargé."
+
+msgid "Check every finished file for viruses with this program"
+msgstr "Analyser chaque fichier terminé avec cet antivirus"
+
+msgid "C:\\Program Files\\Windows Defender\\MpCmdRun.exe"
+msgstr "C:\\Program Files\\Windows Defender\\MpCmdRun.exe"
+
+msgid "Command line parameters"
+msgstr "Paramètres de ligne de commande"
+
+msgid "-Scan -ScanType 3 -File [File]"
+msgstr "-Scan -ScanType 3 -File [File]"
+
+msgid "Advanced"
+msgstr "Avancé"
+
+msgid "User-Agent for downloads added by hand"
+msgstr "User-Agent des téléchargements ajoutés à la main"
+
+msgid "Connection type / speed"
+msgstr "Type / vitesse de connexion"
+
+msgid "Low speed (modem, mobile)"
+msgstr "Faible débit (modem, mobile)"
+
+msgid "Medium speed (DSL)"
+msgstr "Débit moyen (ADSL)"
+
+msgid "High speed (fiber, cable, LAN)"
+msgstr "Haut débit (fibre, câble, réseau local)"
+
+msgid "Default max. connections number"
+msgstr "Nombre max. de connexions par défaut"
+
+msgid "Downloads at the same time (0 = no limit)"
+msgstr "Téléchargements simultanés (0 = sans limite)"
+
+msgid "Retries on error"
+msgstr "Essais en cas d'erreur"
+
+msgid "Exceptions: servers with their own number of connections"
+msgstr "Exceptions : serveurs avec leur propre nombre de connexions"
+
+msgid "Server"
+msgstr "Serveur"
+
+msgid "example.com"
+msgstr "example.com"
+
+msgid "Download limits"
+msgstr "Limites de téléchargement"
+
+msgid "Download no more than"
+msgstr "Ne pas télécharger plus de"
+
+msgid "MB every"
+msgstr "Mo toutes les"
+
+msgid "hours"
+msgstr "heures"
+
+msgid "Addresses separated by spaces. SOCKS proxies: use the system settings."
+msgstr "Adresses séparées par des espaces. Proxys SOCKS : utilisez les paramètres du système."
+
+msgid "No proxy"
+msgstr "Pas de proxy"
+
+msgid "Use the system settings (like your browser)"
+msgstr "Utiliser les paramètres du système (comme le navigateur)"
+
+msgid "Manual proxy configuration (HTTP / HTTPS)"
+msgstr "Configuration manuelle du proxy (HTTP / HTTPS)"
+
+msgid "Proxy address"
+msgstr "Adresse du proxy"
+
+msgid "proxy.example.com"
+msgstr "proxy.example.com"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "User name"
+msgstr "Nom d'utilisateur"
+
+msgid "Don't use the proxy for"
+msgstr "Ne pas utiliser le proxy pour"
+
+msgid "localhost 127.0.0.1 *.local"
+msgstr "localhost 127.0.0.1 *.local"
+
+msgid "User names and passwords for sites that ask for them:"
+msgstr "Noms d'utilisateur et mots de passe des sites qui les demandent :"
+
+msgid "Passwords are encrypted with a key kept in your login Keychain."
+msgstr "Les mots de passe sont chiffrés avec une clé conservée dans votre trousseau de session."
+
+msgid "Saved in the settings file of your Windows user account."
+msgstr "Enregistré dans le fichier de paramètres de votre compte Windows."
+
+msgid "Site / path"
+msgstr "Site / chemin"
+
+msgid "example.com/members"
+msgstr "example.com/members"
+
+msgid "Add / Update"
+msgstr "Ajouter / Mettre à jour"
+
+msgid ".wav files. Empty = no sound for that event."
+msgstr "Fichiers .wav. Vide = aucun son pour cet événement."
+
+msgid "Play sounds"
+msgstr "Jouer des sons"
+
+msgid "Download failed"
+msgstr "Échec du téléchargement"
+
+msgid "Queue started"
+msgstr "File démarrée"
+
+msgid "Queue finished"
+msgstr "File terminée"
+
+msgid "Every download can also have its own limit: its progress window > Speed Limiter tab."
+msgstr "Chaque téléchargement peut avoir sa propre limite : sa fenêtre de progression > onglet Limiteur de vitesse."
+
+msgid "Turn the speed limiter on"
+msgstr "Activer le limiteur de vitesse"
+
+msgid "Always turn on the speed limiter when Mac Downloader starts"
+msgstr "Toujours activer le limiteur au démarrage de Mac Downloader"
+
+msgid "Keep sharing a finished torrent for (minutes)"
+msgstr "Continuer à partager un torrent terminé pendant (minutes)"
+
+msgid "0 = stop as soon as all files are here. Sharing longer helps the others who download the same torrent."
+msgstr "0 = s'arrêter dès que tous les fichiers sont là. Partager plus longtemps aide ceux qui téléchargent le même torrent."
+
+msgid "Maximum upload speed (KB/s, 0 = no limit)"
+msgstr "Vitesse d'envoi maximale (Ko/s, 0 = sans limite)"
+
+msgid "While a torrent downloads it also sends pieces to others (that is how torrents work). A limit keeps your internet free for other things."
+msgstr "Pendant le téléchargement, un torrent envoie aussi des morceaux aux autres (c'est le principe des torrents). Une limite garde votre internet libre pour autre chose."
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Add a torrent"
+msgstr "Ajouter un torrent"
+
+msgid "A magnet link, or a .torrent file:"
+msgstr "Un lien magnet, ou un fichier .torrent :"
+
+msgid "magnet:?xt=urn:btih:…  or  C:\\…\\file.torrent"
+msgstr "magnet:?xt=urn:btih:…  ou  C:\\…\\file.torrent"
+
+msgid "Open .torrent file…"
+msgstr "Ouvrir un fichier .torrent…"
+
+msgid "A magnet link brings its file list from the other computers when it starts: all its files are downloaded."
+msgstr "Un lien magnet reçoit sa liste de fichiers des autres ordinateurs au démarrage : tous ses fichiers sont téléchargés."
+
+msgid "Paste a magnet link or open a .torrent file: what it shares shows up here."
+msgstr "Collez un lien magnet ou ouvrez un fichier .torrent : son contenu apparaît ici."
+
+msgid "Download a playlist"
+msgstr "Télécharger une playlist"
+
+msgid "Paste the address of a playlist:"
+msgstr "Collez l'adresse d'une playlist :"
+
+msgid "https://…/playlist?list=…"
+msgstr "https://…/playlist?list=…"
+
+msgid "Getting the list…"
+msgstr "Récupération de la liste…"
+
+msgid "Get videos"
+msgstr "Récupérer les vidéos"
+
+msgid "Video"
+msgstr "Vidéo"
+
+msgid "Length"
+msgstr "Durée"
+
+msgid "Getting the videos of the playlist…"
+msgstr "Récupération des vidéos de la playlist…"
+
+msgid "The videos of the playlist show up here."
+msgstr "Les vidéos de la playlist apparaissent ici."
+
+msgid "Quality"
+msgstr "Qualité"
+
+msgid "Best quality (MP4)"
+msgstr "Meilleure qualité (MP4)"
+
+msgid "2160p 4K"
+msgstr "2160p 4K"
+
+msgid "1440p 2K"
+msgstr "1440p 2K"
+
+msgid "1080p Full HD"
+msgstr "1080p Full HD"
+
+msgid "720p HD"
+msgstr "720p HD"
+
+msgid "480p SD"
+msgstr "480p SD"
+
+msgid "360p SD"
+msgstr "360p SD"
+
+msgid "Audio only (M4A)"
+msgstr "Audio seulement (M4A)"
+
+msgid "Audio MP3"
+msgstr "Audio MP3"
+
+msgid "Number the files"
+msgstr "Numéroter les fichiers"
+
+msgid "Check Connection"
+msgstr "Vérifier la connexion"
+
+msgid "Browser"
+msgstr "Navigateur"
+
+msgid "Open Browser Again…"
+msgstr "Rouvrir le navigateur…"
+
+msgid "Show Folder…"
+msgstr "Afficher le dossier…"
+
+msgid "Having Trouble?"
+msgstr "Un problème ?"
+
+msgid "Extension Folder"
+msgstr "Dossier de l’extension"
+
+msgid "Copy Folder Path"
+msgstr "Copier le chemin du dossier"
+
+msgid "Done"
+msgstr "Terminé"
+
+msgid "Version {}"
+msgstr "Version {}"
+
+msgid "Coded by Ahmed Ezzat"
+msgstr "Développé par Ahmed Ezzat"
+
+msgid "Support with PayPal"
+msgstr "Soutenir avec PayPal"
+
+msgid "What's new in Mac Downloader"
+msgstr "Nouveautés de Mac Downloader"
+
+msgid "Mac Downloader is free and has no ads. If it helps you and you would like to support its development, you can send a gift with PayPal. Thank you!"
+msgstr "Mac Downloader est gratuit et sans publicité. S'il vous est utile et que vous voulez soutenir son développement, vous pouvez faire un don avec PayPal. Merci !"

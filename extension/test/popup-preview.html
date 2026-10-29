@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Popup Preview</title>
+<link rel="stylesheet" href="../apple-ui.css">
+<style>
+  /* Gallery chrome only; the popup and settings use the real stylesheet. */
+  .gallery { padding: 24px; }
+  .gallery h1 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+  .gallery > p { margin: 0 0 16px; color: var(--secondary-label); font-size: 12px; }
+  .gallery nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 20px; }
+  .gallery nav a { padding: 4px 10px; border-radius: 7px; background: var(--surface); color: var(--accent-ink); font-size: 12px; text-decoration: none; }
+  .gallery nav a[aria-current="page"] { background: var(--button-fill); color: var(--button-label); }
+  .gallery .frames { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; }
+  .gallery figure { margin: 0; }
+  .gallery figcaption { margin: 0 0 6px; font-size: 11px; font-weight: 600; color: var(--secondary-label); }
+  .gallery figcaption a { color: inherit; }
+  .gallery iframe { display: block; border: 1px solid var(--separator); border-radius: 12px; background: var(--page); box-shadow: 0 8px 28px -12px rgb(0 0 0 / 30%); }
+</style>
+</head>
+<body>
+<!-- Development-only harness: the real popup.js / options.js run against
+     local fixtures. No extension install, app, network or downloads.
+     Open without parameters for a gallery of every state, or use
+     ?state=rich|offline|paused|protected|loading|empty|working|problem|switch
+     &theme=light|dark  &width=<px> (simulates a constrained popup panel)
+     ?page=options&theme=light|dark  for the settings page. -->
+<template id="popup-markup">
+  <header class="popup-header">
+    <img class="app-icon" src="icons/icon128.png" alt="" width="32" height="32">
+    <div class="header-copy">
+      <h1>Mac Downloader</h1>
+      <p class="connection" id="status" role="status" aria-live="polite">Connecting…</p>
+    </div>
+    <button class="icon-button" id="settings" type="button" title="Extension Settings" aria-label="Extension Settings"><svg class="glyph" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+  </header>
+  <main class="popup-content">
+    <div class="group integration-row">
+      <label class="integration-copy" for="enabled"><strong id="onText">Browser Integration</strong><small id="onHint">Send downloads to Mac Downloader</small></label>
+      <span class="switch-control"><input type="checkbox" id="enabled" role="switch" checked aria-label="Browser Integration" aria-describedby="onHint"><span class="switch-track" aria-hidden="true"></span></span>
+    </div>
+    <section aria-labelledby="pageHeading">
+      <div class="section-heading"><h2 id="pageHeading">On This Page</h2><span class="item-count" id="mediaCount"></span></div>
+      <div class="group media-group">
+        <p class="video-title" id="videoTitle" hidden></p>
+        <div class="media-list" id="media">
+          <div class="media-state is-loading" role="status"><span class="spinner" aria-hidden="true"></span><strong>Looking for the current video…</strong></div>
+        </div>
+      </div>
+    </section>
+    <details class="widget-settings">
+      <summary><svg class="glyph disclosure-chevron" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Video Button Size</summary>
+      <div class="scale-row"><input type="range" id="scale" min="50" max="200" step="5" value="100" aria-label="Video button size"><output id="scaleText" for="scale">100%</output><button class="text-button" id="scaleReset" type="button">Reset</button></div>
+    </details>
+  </main>
+  <footer class="popup-footer">
+    <p class="connection-hint" id="connectionHint" hidden>Mac Downloader needs to be open to receive downloads.</p>
+    <a class="button-link secondary-action" id="openApp" href="ezoo-download://open">Open Mac Downloader</a>
+  </footer>
+</template>
+<template id="options-markup">
+  <main class="settings-shell">
+    <header class="settings-header"><img class="app-icon" src="icons/icon128.png" alt="" width="40" height="40"><div><h1>Mac Downloader</h1><p>Browser Extension Settings</p></div></header>
+    <section class="settings-section" aria-labelledby="downloads-heading"><h2 id="downloads-heading">Downloads</h2><div class="group">
+      <div class="setting-row"><div class="setting-copy"><label for="intercept">Send Downloads to Mac Downloader</label><small>Files you download in this browser open in the app.</small></div><span class="switch-control"><input type="checkbox" id="intercept" role="switch" aria-label="Send Downloads to Mac Downloader"><span class="switch-track" aria-hidden="true"></span></span></div>
+      <div class="setting-row"><div class="setting-copy"><label for="minSize">Minimum File Size</label><small>Smaller files stay in the browser. Use 0 for all files.</small></div><div class="number-control"><input type="number" id="minSize" min="0" step="any" aria-describedby="minimum-error"><span class="unit" aria-hidden="true">KB</span></div></div>
+    </div><p class="field-error" id="minimum-error" hidden>Enter a file size of 0 KB or more.</p></section>
+    <section class="settings-section" aria-labelledby="video-heading"><h2 id="video-heading">Video Button</h2><div class="group"><div class="setting-row range-setting">
+      <div class="range-heading"><div class="setting-copy"><label for="bubbleScale">Button Size</label><small>The download button shown above web videos.</small></div><output id="bubbleScaleText" for="bubbleScale">100%</output></div>
+      <div class="range-controls"><input type="range" id="bubbleScale" min="50" max="200" step="5" value="100" aria-label="Video button size"><button class="text-button" id="bubbleScaleReset" type="button">Reset</button></div>
+      <div class="scale-example" aria-hidden="true"><span class="preview-download" id="buttonPreview"><svg class="glyph" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></span></div>
+    </div></div><p class="section-note">Light and dark appearance follow your Mac.</p></section>
+    <details class="settings-section"><summary><svg class="glyph disclosure-chevron" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Connection</summary><div class="group"><div class="setting-row"><div class="setting-copy"><label for="port">App Port</label><small>Must match the browser port in Mac Downloader.</small></div><input type="number" id="port" min="1024" max="65535" step="1" aria-describedby="port-error"></div></div><p class="field-error" id="port-error" hidden>Enter a whole number from 1024 to 65535.</p><p class="section-note">The setup assistant normally sets this for you.</p></details>
+    <div class="saved" id="saved" role="status" aria-live="polite">Changes save automatically.</div>
+  </main>
+</template>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const theme = ["light", "dark"].includes(params.get("theme")) ? params.get("theme") : "";
+  if (theme) document.documentElement.dataset.theme = theme;
+  const harnessUrl = (query) => {
+    const next = new URLSearchParams(query);
+    if (theme && !next.has("theme")) next.set("theme", theme);
+    return `${location.pathname}?${next}`;
+  };
+
+  // ---------------------------------------------------------------- fixtures
+  const LONG_TITLE = "The Pacific Coast Highway, Mile by Mile: Lighthouses, Tide Pools, and the People Who Keep Them Running Through Every Season (Extended Director’s Cut, Remastered in 4K HDR)";
+  const yt = (option, title = LONG_TITLE) => ({ title, duration: 2735, source: "https://www.youtube.com/watch?v=preview", videoUrl: "https://media.invalid/v", ...option });
+  const RICH = [
+    { label: "2160p60 4K · MP4 AV1", sub: "1.9 GB", yt: yt({ key: "2160p60|MP4", quality: "2160p60", tag: "4K", ext: "mp4", codec: "AV1", size: 2040109465, kbps: 5968, audioUrl: "https://media.invalid/a" }) },
+    { label: "2160p 4K · WEBM", sub: "1.2 GB", yt: yt({ key: "2160p|WEBM", quality: "2160p", tag: "4K", ext: "webm", codec: "VP9", size: 1288490188, audioUrl: "https://media.invalid/a" }) },
+    { label: "1440p 2K · MKV", sub: "size unknown", yt: yt({ key: "1440p|MP4", quality: "1440p", tag: "2K", ext: "mkv", codec: "VP9", size: 0, audioUrl: "https://media.invalid/a" }) },
+    { label: "1080p60 Full HD · MP4", sub: "412.6 MB", yt: yt({ key: "1080p60|MP4", quality: "1080p60", tag: "Full HD", ext: "mp4", codec: "H.264", size: 432650000, audioUrl: "https://media.invalid/a" }) },
+    { label: "1080p Full HD · MP4 (video only)", sub: "size unknown", yt: yt({ key: "1080p|MP4-video", quality: "1080p", tag: "Full HD", ext: "mp4", codec: "H.264", size: 0, hasAudio: false }) },
+    { label: "720p HD · MP4", sub: "198.2 MB", yt: yt({ key: "720p|MP4+A", quality: "720p", tag: "HD", ext: "mp4", codec: "H.264", size: 207800000 }) },
+    { label: "480p SD · WEBM", sub: "96.4 MB", yt: yt({ key: "480p|WEBM", quality: "480p", tag: "SD", ext: "webm", codec: "VP9", size: 101100000, audioUrl: "https://media.invalid/a" }) },
+    { label: "360p SD · MP4", sub: "61.0 MB · video with sound", yt: yt({ key: "360p|MP4", quality: "360p", tag: "SD", ext: "mp4", size: 63960000 }) },
+    { label: "4320p 8K · MP4", sub: "Not offered for this video", disabled: true },
+    { label: "HLS stream", sub: "https://stream.media-cdn.example/hls/coast/master.m3u8", url: "https://stream.media-cdn.example/hls/coast/master.m3u8", ext: "ts" },
+    { label: "video/mp4 · 24.5 MB", sub: "https://cdn.example.com/clips/coast-preview.mp4", url: "https://cdn.example.com/clips/coast-preview.mp4", ext: "mp4" },
+    { label: "Pacific-Coast-Highway-Extended-Directors-Cut-Remastered-4K-HDR-Master-Export-Final-v2.mp4", sub: "https://files.example.org/x.mp4", url: "https://files.example.org/x.mp4", ext: "mp4" },
+    { label: "Audio only · M4A 129k", sub: "42.3 MB", yt: yt({ key: "audio|M4A", quality: "audio", ext: "m4a", kbps: 129, size: 44350000 }) },
+    { label: "Audio only · WEBM 160k", sub: "size unknown", yt: yt({ key: "audio|WEBM", quality: "audio", ext: "webm", kbps: 160, size: 0 }) },
+    { label: "Audio · MP3 192k", sub: "62.6 MB", yt: yt({ key: "audio|MP3", quality: "mp3", ext: "mp3", kbps: 192, size: 65640000 }) },
+  ];
+  const SHORT = [RICH[3], RICH[5], RICH[12]];
+  const youtube = { id: 7, title: `${LONG_TITLE} - YouTube`, url: "https://www.youtube.com/watch?v=preview&list=PLpreview" };
+  const plain = { id: 7, title: "Harbor Lights at Dusk - YouTube", url: "https://www.youtube.com/watch?v=preview" };
+  const STATES = {
+    rich: { label: "Long title, 15 formats, playlist", tab: youtube, items: RICH },
+    offline: { label: "App not running", tab: plain, items: SHORT, online: false },
+    paused: { label: "Integration paused", tab: plain, items: SHORT, store: { enabled: false } },
+    protected: { label: "Protected (Netflix)", tab: { id: 7, title: "Netflix", url: "https://www.netflix.com/watch/80100172" }, items: [{ disabled: true, protected: true, type: "protected", url: null, label: "Protected video", sub: "Netflix playback is not supported by this downloader. Use Netflix’s official app on a supported device for offline viewing." }] },
+    loading: { label: "Looking for the video", tab: plain, items: [], mediaNeverAnswers: true },
+    empty: { label: "No video on the page", tab: { id: 7, title: "Example Domain", url: "https://example.com/" }, items: [] },
+    working: { label: "Worker resolving formats", tab: plain, items: [{ label: "Getting video qualities…", sub: "This takes a few seconds", disabled: true }] },
+    problem: { label: "Can’t resolve, raw stream found", tab: { id: 7, title: "Coastal Webcam — Live", url: "https://video.example.net/live/coast" }, items: [{ label: "Can't get this video", sub: "The site requires signing in before its formats can be read.", disabled: true }, RICH[10]] },
+    switch: { label: "Same-tab video switch (after 2.5 s)", tab: plain, items: [{ ...RICH[3], yt: { ...RICH[3].yt, title: "Harbor Lights at Dusk" } }, { ...RICH[12], yt: { ...RICH[12].yt, title: "Harbor Lights at Dusk" } }],
+      switchTo: { after: 2500, delay: 1200, tab: { title: "Fog Over the Golden Gate - YouTube", url: "https://www.youtube.com/watch?v=second" },
+        items: [{ ...RICH[5], yt: { ...RICH[5].yt, title: "Fog Over the Golden Gate" } }, { ...RICH[6], yt: { ...RICH[6].yt, title: "Fog Over the Golden Gate" } }] } },
+  };
+
+  // ----------------------------------------------------------- chrome stub
+  function installChrome(fixture) {
+    const listeners = { updated: [], activated: [], removed: [], message: [] };
+    const store = { ...(fixture.store || {}) };
+    let tab = { ...(fixture.tab || plain) }, items = fixture.items || [], token = "preview-token-1", mediaDelay = 220;
+    const later = (fn, ms) => setTimeout(fn, ms);
+    window.chrome = {
+      runtime: {
+        id: "mac-downloader-preview", lastError: null,
+        onMessage: { addListener: (fn) => listeners.message.push(fn) },
+        openOptionsPage() { location.href = harnessUrl({ page: "options" }); },
+        sendMessage(message, callback) {
+          const reply = (value, ms) => later(() => callback && callback(value), ms);
+          switch (message.type) {
+            case "swiftget-status": return reply({ ok: fixture.online !== false }, 90);
+            case "swiftget-get-media":
+              if (fixture.mediaNeverAnswers) return;
+              return reply({ items, clientToken: token, selectionVersion: 0, tabId: message.tabId }, mediaDelay);
+            case "swiftget-download": case "swiftget-playlist":
+              return reply(fixture.online === false ? { ok: false, error: "Mac Downloader is not running" } : { ok: true }, 700);
+            default: return reply({ ok: true }, 0);
+          }
+        },
+      },
+      tabs: {
+        query: async () => [{ ...tab }],
+        onUpdated: { addListener: (fn) => listeners.updated.push(fn) },
+        onActivated: { addListener: (fn) => listeners.activated.push(fn) },
+        onRemoved: { addListener: (fn) => listeners.removed.push(fn) },
+      },
+      storage: { local: { get: async (defaults) => ({ ...defaults, ...store }), set: async (values) => { Object.assign(store, values); } } },
+    };
+    const next = fixture.switchTo;
+    if (next) later(() => {
+      tab = { ...tab, ...next.tab }; items = next.items; token = "preview-token-2"; mediaDelay = next.delay;
+      for (const fn of listeners.updated) fn(tab.id, { url: tab.url }, { ...tab });
+    }, next.after);
+  }
+
+  function mount(name) {
+    const fragment = document.getElementById(`${name}-markup`).content.cloneNode(true);
+    for (const img of fragment.querySelectorAll('img[src^="icons/"]')) img.setAttribute("src", `../${img.getAttribute("src")}`);
+    for (const node of [...document.body.children]) if (node.tagName !== "TEMPLATE" && node.tagName !== "SCRIPT") node.remove();
+    document.body.prepend(fragment);
+    const script = document.createElement("script");
+    script.src = `../${name}.js`;
+    document.body.append(script);
+  }
+
+  const state = params.get("state");
+  if (params.get("page") === "options") {
+    document.title = "Settings Preview";
+    document.body.className = "options-page";
+    installChrome({ store: { port: 9614, intercept: true, minSizeKB: 0, bubbleScale: 1.25 } });
+    mount("options");
+  } else if (state) {
+    const fixture = STATES[state] || STATES.rich;
+    document.title = `Popup Preview · ${fixture.label}`;
+    document.documentElement.className = "popup-document";
+    const width = Number(params.get("width"));
+    if (width >= 160 && width <= 800) document.documentElement.style.width = `${width}px`;
+    document.body.className = "popup";
+    installChrome(fixture);
+    mount("popup");
+    // Keep the app's URL scheme from leaving the harness.
+    document.getElementById("openApp").addEventListener("click", (event) => event.preventDefault());
+  } else {
+    renderGallery();
+  }
+
+  function renderGallery() {
+    const node = (tag, props = {}, ...kids) => { const el = document.createElement(tag); Object.assign(el, props); el.append(...kids); return el; };
+    const gallery = node("main", { className: "gallery" },
+      node("h1", { textContent: "Mac Downloader popup preview" }),
+      node("p", { textContent: "The real popup.js and options.js with local fixtures. Narrow frames simulate a constrained popup panel." }));
+    const nav = node("nav", { ariaLabel: "Appearance" });
+    for (const [label, value] of [["System", ""], ["Light", "light"], ["Dark", "dark"]]) {
+      const link = node("a", { textContent: label, href: value ? `${location.pathname}?theme=${value}` : location.pathname });
+      if (value === theme) link.setAttribute("aria-current", "page");
+      nav.append(link);
+    }
+    const frames = node("div", { className: "frames" });
+    const frame = (caption, query, width, height) => {
+      const href = harnessUrl(query);
+      frames.append(node("figure", {}, node("figcaption", {}, node("a", { href, textContent: caption })),
+        node("iframe", { src: href, title: caption, width: String(width), height: String(height), loading: "lazy" })));
+    };
+    frame("Long title, 15 formats · 368 px", { state: "rich" }, 368, 640);
+    frame("Same · 300 px panel", { state: "rich", width: 300 }, 300, 640);
+    frame("Same · 260 px panel", { state: "rich", width: 260 }, 260, 640);
+    for (const key of ["offline", "paused", "protected", "loading", "empty", "working", "problem", "switch"]) frame(STATES[key].label, { state: key }, 368, 520);
+    frame("Settings · 560 px", { page: "options" }, 560, 760);
+    frame("Settings · 340 px", { page: "options" }, 340, 860);
+    gallery.append(nav, frames);
+    document.body.prepend(gallery);
+  }
+})();
+</script>
+</body>
+</html>

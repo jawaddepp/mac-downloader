@@ -1,0 +1,2406 @@
+// Mac Downloader – user interface (Slint)
+// A native-feeling download library: a quiet sidebar, one unified toolbar,
+// rhythmic rows with a single detail line, and an optional detailed table.
+
+import { Button, LineEdit, SpinBox, CheckBox, ComboBox, ListView, TextEdit, Palette, ScrollView } from "std-widgets.slint";
+import { WindowInfo, ToolTip, DownloadRow, QueueRow, SegView, Cols, ColDef, CatRow, PairRow, LinkRow, Theme, ThemedWindow, CaptionButton, P, G, TypeIcon, KindTile, BigTypeIcon, TreeItem, SidebarHeading, HeaderCell, Cell, MenuPanel, MenuEntry, MenuSep, MenuLabel, Glyph, IconButton, ToolbarButton, SearchField, ProgressBar, Segment, SegmentedBar, Disclosure, Notice, EmptyState, FieldRow, QuietField, QuietButton, ListFrame } from "common.slint";
+export { DownloadRow, QueueRow, SegView, Cols, ColDef, CatRow, PairRow, LinkRow, Theme, WindowInfo }
+export { BrowserRow } from "dialogs.slint";
+export { ColumnsDialog, CategoryDialog, FindDialog, PropertiesDialog, DuplicateDialog, CountdownDialog, SchedulerDialog, GrabberDialog, TipDialog, RefreshDialog, SettingsDialog, PlaylistDialog, TorrentDialog, BrowserDialog, AboutDialog, UpdateDialog, WhatsNewDialog } from "dialogs.slint";
+
+component DownloadItem inherits Rectangle {
+    in property <DownloadRow> data;
+    in property <bool> selected;
+    in property <[QueueRow]> queues;
+    in property <Cols> cols;
+    in property <[ColDef]> columns;
+    // alternate rows of the detailed table
+    in property <bool> alt;
+    // how many downloads are selected (the menu then works on all of them)
+    in property <int> sel-count;
+    // click with Command / Shift
+    callback pick(bool, bool);
+    // right click: keep a multiple selection that includes this row
+    callback right-pick();
+    // dragging with the mouse held down: rows below (+) or above (-) this one
+    callback drag(int);
+    property <int> drag-last;
+    callback activated();
+    callback action(string);
+    callback move-to-queue(int);
+    // dragging a finished file out of the program (onto the desktop, a folder…)
+    callback drag-out();
+    property <bool> dragged-out;
+    in property <bool> detailed;
+    // Fixed pitch (drag selection measures rows by it); the visible card is
+    // inset so rows stay separated and selection reads as one shape.
+    height: root.detailed ? 26px * max(1, Theme.font-scale) : 58px * max(1, Theme.font-scale);
+    background: transparent;
+    accessible-role: list-item;
+    accessible-label: root.data.name;
+    accessible-description: root.data.detail;
+    accessible-item-selected: root.selected;
+    accessible-action-default => { root.activated(); }
+    Rectangle {
+        x: 0px;
+        y: root.detailed ? 0px : 1px;
+        width: parent.width;
+        height: root.detailed ? parent.height : parent.height - 2px;
+        border-radius: root.detailed ? 0px : 8px;
+        background: root.selected ? Theme.select : ta.has-hover ? Theme.hover : root.detailed && root.alt ? Theme.fill : transparent;
+    }
+    ta := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        double-clicked => {
+            root.activated();
+        }
+        moved => {
+            // a finished file pulled sideways: hand it to the system to drop elsewhere
+            if (self.pressed && root.done && !root.dragged-out && abs(self.mouse-x - self.pressed-x) > 12px) {
+                root.dragged-out = true;
+                root.drag-out();
+                return;
+            }
+            if (self.pressed && floor(self.mouse-y / root.height) != root.drag-last) {
+                root.drag-last = floor(self.mouse-y / root.height);
+                root.drag(root.drag-last);
+            }
+        }
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                root.drag-last = 0;
+                root.dragged-out = false;
+                root.pick(ev.modifiers.control || ev.modifiers.meta, ev.modifiers.shift);
+            }
+            // right click (or Control-click): select the row, open the menu where the mouse is
+            if ((ev.button == PointerEventButton.right && ev.kind == PointerEventKind.up)) {
+                root.right-pick();
+                root.menu-x = self.mouse-x;
+                root.menu-y = self.mouse-y;
+                menu.show();
+            }
+        }
+    }
+    property <length> menu-x;
+    property <length> menu-y;
+    property <bool> done: root.data.state == 3;
+    property <bool> can-resume: root.data.state == 2 || root.data.state == 4;
+    property <bool> can-stop: root.data.state == 0 || root.data.state == 1;
+    menu := PopupWindow {
+        x: root.menu-x;
+        y: root.menu-y;
+        width: 252px;
+        height: menu-list.preferred-height;
+        MenuPanel {
+            width: parent.width;
+            height: menu-list.preferred-height;
+            menu-list := VerticalLayout {
+                padding: 5px;
+                spacing: 0px;
+                if root.sel-count > 1: MenuLabel {
+                    text: @tr("{} downloads selected", root.sel-count);
+                }
+                MenuEntry {
+                    text: root.done ? @tr("Open") : @tr("Show download progress");
+                    glyph: root.done ? "openwith" : "progress";
+                    clicked => { menu.close(); root.activated(); }
+                }
+                MenuEntry {
+                    text: @tr("Open with…");
+                    enabled: root.done;
+                    clicked => { menu.close(); root.action("openwith"); }
+                }
+                if !root.done && (root.data.kind == "video" || root.data.kind == "audio"): MenuEntry {
+                    text: @tr("Play while downloading");
+                    glyph: "play";
+                    clicked => { menu.close(); root.action("preview"); }
+                }
+                MenuEntry {
+                    text: Theme.native-macos ? @tr("Show in Finder") : @tr("Open folder");
+                    glyph: "folder";
+                    clicked => { menu.close(); root.action("folder"); }
+                }
+                MenuSep { }
+                MenuEntry {
+                    text: @tr("Resume download");
+                    glyph: "play";
+                    enabled: root.can-resume || root.sel-count > 1;
+                    clicked => { menu.close(); root.action("resume"); }
+                }
+                MenuEntry {
+                    text: @tr("Stop download");
+                    glyph: "pause";
+                    enabled: root.can-stop || root.sel-count > 1;
+                    clicked => { menu.close(); root.action("stop"); }
+                }
+                MenuEntry {
+                    text: @tr("Redownload");
+                    glyph: "redo";
+                    clicked => { menu.close(); root.action("restart"); }
+                }
+                MenuEntry {
+                    text: @tr("Refresh download address…");
+                    glyph: "refresh";
+                    enabled: !root.done;
+                    clicked => { menu.close(); root.action("refresh"); }
+                }
+                MenuEntry {
+                    text: @tr("Move / Rename…");
+                    glyph: "edit";
+                    clicked => { menu.close(); root.action("move"); }
+                }
+                MenuSep { }
+                MenuLabel {
+                    text: @tr("Move to queue");
+                }
+                for q in root.queues: MenuEntry {
+                    text: q.name;
+                    checked: root.data.queue == q.id;
+                    clicked => { menu.close(); root.move-to-queue(q.id); }
+                }
+                MenuEntry {
+                    text: @tr("Delete from queue");
+                    enabled: root.data.queue != "";
+                    clicked => { menu.close(); root.move-to-queue(-1); }
+                }
+                MenuSep { }
+                MenuEntry {
+                    text: @tr("Copy address");
+                    glyph: "copy";
+                    clicked => { menu.close(); root.action("copy"); }
+                }
+                MenuEntry {
+                    text: @tr("Check file (SHA-256)");
+                    glyph: "hash";
+                    enabled: root.done;
+                    clicked => { menu.close(); root.action("sha256"); }
+                }
+                MenuEntry {
+                    text: @tr("Properties");
+                    glyph: "info";
+                    clicked => { menu.close(); root.action("properties"); }
+                }
+                MenuSep { }
+                MenuEntry {
+                    text: @tr("Remove");
+                    glyph: "trash";
+                    destructive: true;
+                    clicked => { menu.close(); root.action("delete"); }
+                }
+            }
+        }
+    }
+    if root.detailed: HorizontalLayout {
+        padding-left: 8px;
+        spacing: 0px;
+        Rectangle {
+            width: 30px;
+            KindTile {
+                kind: root.data.kind;
+                x: 2px;
+                y: (parent.height - self.height) / 2;
+                width: 18px;
+                height: 18px;
+            }
+        }
+        // the columns in the order and widths of the header
+        for c in root.columns: Rectangle {
+            width: c.width;
+            // clip: long right-to-left (Arabic) names must never spill over
+            clip: true;
+            if c.key == "name": Cell {
+                x: 6px;
+                width: parent.width - 10px;
+                height: parent.height;
+                text: root.data.name;
+                horizontal-alignment: left;
+            }
+            if c.key == "q": Cell {
+                width: parent.width;
+                height: parent.height;
+                text: root.data.queue;
+                horizontal-alignment: center;
+                color: Theme.muted;
+            }
+            if c.key == "size": Cell {
+                width: parent.width - 8px;
+                height: parent.height;
+                text: root.data.size;
+                horizontal-alignment: right;
+                color: Theme.muted;
+            }
+            if c.key == "status": Rectangle {
+                // a slim bar beside the status of an unfinished, measurable download
+                if root.data.known && (root.data.state == 1 || root.data.state == 2): ProgressBar {
+                    x: 8px;
+                    y: (parent.height - self.height) / 2;
+                    width: max(24px, parent.width * 0.42);
+                    height: 4px;
+                    value: root.data.progress;
+                    state: root.data.state;
+                }
+                Cell {
+                    x: root.data.known && (root.data.state == 1 || root.data.state == 2) ? max(24px, parent.width * 0.42) + 14px : 8px;
+                    width: parent.width - self.x - 4px;
+                    height: parent.height;
+                    text: root.data.state == 2 && root.data.status == "" ? @tr("Paused") : root.data.status;
+                    color: root.data.state == 4 ? Theme.err : Theme.muted;
+                    font-size: Theme.footnote-size;
+                }
+            }
+            if c.key == "eta": Cell {
+                width: parent.width - 8px;
+                height: parent.height;
+                text: root.data.eta;
+                horizontal-alignment: right;
+                color: Theme.muted;
+            }
+            if c.key == "speed": Cell {
+                width: parent.width - 8px;
+                height: parent.height;
+                text: root.data.speed;
+                horizontal-alignment: right;
+                color: Theme.muted;
+            }
+            if c.key == "last": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.last-try;
+                color: Theme.muted;
+            }
+            if c.key == "desc": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.description;
+                color: Theme.muted;
+            }
+            if c.key == "added": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.added;
+                color: Theme.muted;
+            }
+            if c.key == "saveto": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.save-to;
+                color: Theme.muted;
+            }
+            if c.key == "referer": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.referer;
+                color: Theme.muted;
+            }
+            if c.key == "parent": Cell {
+                x: 8px;
+                width: parent.width - 12px;
+                height: parent.height;
+                text: root.data.parent;
+                color: Theme.muted;
+            }
+        }
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+    }
+    if !root.detailed: HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 10px;
+        spacing: 12px;
+        Rectangle {
+            width: 32px;
+            KindTile {
+                kind: root.data.kind;
+                y: (parent.height - self.height) / 2;
+                width: 32px;
+                height: 32px;
+            }
+        }
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 3px;
+            Text {
+                text: root.data.name;
+                color: Theme.text;
+                font-size: Theme.body-size;
+                font-weight: 500;
+                overflow: elide;
+            }
+            Text {
+                text: root.data.detail;
+                color: root.data.state == 4 ? Theme.err : Theme.muted;
+                font-size: Theme.footnote-size;
+                overflow: elide;
+            }
+            if root.data.known && (root.data.state == 1 || root.data.state == 2 || (root.data.state == 0 && root.data.progress > 0)): ProgressBar {
+                height: 4px;
+                value: root.data.progress;
+                state: root.data.state;
+                accessible-label: root.data.name;
+            }
+        }
+        if root.data.percent != "": Text {
+            min-width: 34px;
+            text: root.data.percent;
+            color: Theme.muted;
+            font-size: Theme.footnote-size;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+        VerticalLayout {
+            alignment: center;
+            IconButton {
+                glyph: root.data.state == 3 ? "reveal" : root.data.state == 4 ? "refresh" : root.data.state == 1 || root.data.state == 0 ? "pause" : "play";
+                glyph-size: root.data.state == 1 || root.data.state == 0 || root.data.state == 2 ? 13px : 15px;
+                tint: Theme.muted;
+                label: root.data.state == 3 ? (Theme.native-macos ? @tr("Show in Finder") : @tr("Show in folder"))
+                    : root.data.state == 4 ? @tr("Try Again")
+                    : root.data.state == 1 || root.data.state == 0 ? @tr("Pause") : @tr("Resume");
+                clicked => { root.action(root.data.state == 3 ? "folder" : root.data.state == 1 || root.data.state == 0 ? "stop" : "resume"); }
+            }
+        }
+    }
+}
+
+// right click menu of the sidebar (categories and queues)
+component TreeMenu inherits PopupWindow {
+    in property <string> target;
+    in property <bool> is-queue;
+    in property <bool> builtin;
+    callback chosen(string);
+    width: 220px;
+    height: tm-list.preferred-height;
+    MenuPanel {
+        width: parent.width;
+        height: tm-list.preferred-height;
+        tm-list := VerticalLayout {
+            padding: 5px;
+            if root.is-queue: MenuEntry {
+                text: @tr("Start queue");
+                glyph: "play";
+                clicked => { root.close(); root.chosen("start"); }
+            }
+            if root.is-queue: MenuEntry {
+                text: @tr("Stop queue");
+                glyph: "stop";
+                clicked => { root.close(); root.chosen("stop"); }
+            }
+            if root.is-queue: MenuEntry {
+                text: @tr("Edit queue / schedule…");
+                glyph: "clock";
+                clicked => { root.close(); root.chosen("edit"); }
+            }
+            if root.is-queue: MenuSep { }
+            if root.is-queue: MenuEntry {
+                text: @tr("New queue…");
+                glyph: "plus";
+                clicked => { root.close(); root.chosen("new"); }
+            }
+            if root.is-queue: MenuEntry {
+                text: @tr("Delete queue");
+                glyph: "trash";
+                destructive: true;
+                enabled: !root.builtin;
+                clicked => { root.close(); root.chosen("delete"); }
+            }
+            if !root.is-queue: MenuEntry {
+                text: @tr("Add category…");
+                glyph: "plus";
+                clicked => { root.close(); root.chosen("add"); }
+            }
+            if !root.is-queue && root.target != "": MenuEntry {
+                text: @tr("Properties…");
+                glyph: "info";
+                clicked => { root.close(); root.chosen("props"); }
+            }
+            if !root.is-queue && root.target != "": MenuSep { }
+            if !root.is-queue && root.target != "": MenuEntry {
+                text: @tr("Delete category");
+                glyph: "trash";
+                destructive: true;
+                enabled: !root.builtin;
+                clicked => { root.close(); root.chosen("delete"); }
+            }
+        }
+    }
+}
+
+// a sidebar item with its own right click menu
+component CtxTreeItem inherits TreeItem {
+    in property <bool> is-queue;
+    in property <bool> builtin;
+    in property <string> target;
+    callback chosen(string);
+    property <length> mx;
+    property <length> my;
+    context(x, y) => {
+        self.mx = x;
+        self.my = y;
+        pm.show();
+    }
+    pm := TreeMenu {
+        x: root.mx;
+        y: root.my;
+        target: root.target;
+        is-queue: root.is-queue;
+        builtin: root.builtin;
+        chosen(a) => {
+            root.chosen(a);
+        }
+    }
+}
+
+export component MainWindow inherits ThemedWindow {
+    // set for a moment so the window comes in front of the browser
+    in property <bool> front;
+    always-on-top: root.front;
+    title: @tr("Mac Downloader");
+    // Options > General > Background picture (shows through the panels)
+    in property <image> bg-image;
+    in property <bool> has-bg-image;
+    // the size the window opens with
+    preferred-width: 1040px;
+    preferred-height: 680px;
+    min-width: 760px;
+    min-height: 460px;
+
+    in property <[DownloadRow]> rows;
+    in property <[QueueRow]> queues;
+    in property <[CatRow]> categories;
+    // counts: all, unfinished, finished
+    in property <string> count-all;
+    in property <string> count-unfinished;
+    in property <string> count-finished;
+    in-out property <int> selected-id: -1;
+    // "all", "cat:Video", "unfinished", "unf:Video", "finished", "fin:Video", "queue:3"
+    in-out property <string> view: "all";
+    // the name of the selected category or queue, in the current language
+    in property <string> view-title;
+    property <string> list-title: root.view == "all" ? @tr("All Downloads")
+        : root.view == "unfinished" ? @tr("Unfinished")
+        : root.view == "finished" ? @tr("Finished")
+        : root.view-title != "" ? root.view-title : @tr("All Downloads");
+    in-out property <string> search;
+    in property <string> status-text;
+    in property <string> limiter-text;
+    in property <int> selected-state: -1;
+    // multiple selection: how many, and whether any can be resumed / stopped
+    in property <int> sel-count;
+    in property <bool> can-resume;
+    in property <bool> can-stop;
+    in property <int> current-queue: 1;
+    in property <bool> limiter-on;
+    in property <bool> hide-categories;
+    in property <string> sort-by: "date";
+    in property <bool> sort-desc: true;
+    // Downloads > When all downloads finish: 0 nothing, 1 shut down, 2 sleep, 3 exit, 4 hibernate
+    in property <int> all-done: 0;
+    in property <Cols> cols: { q: true, size: true, status: true, eta: true, speed: true, last: true, desc: true };
+    in property <bool> toolbar-small;
+    in property <string> language: "en";
+    in-out property <bool> open-all: true;
+    in-out property <bool> open-unf: false;
+    in-out property <bool> open-fin: false;
+    in-out property <bool> open-queues: true;
+
+    callback add-url();
+    callback add-batch();
+    callback add-batch-clipboard();
+    callback resume(int);
+    callback pause(int);
+    callback resume-all();
+    callback stop-all();
+    callback delete(int);
+    callback delete-completed();
+    callback open-settings(int);
+    callback open-scheduler();
+    callback open-limiter();
+    callback toggle-limiter();
+    callback start-queue(int);
+    callback stop-queue(int);
+    callback new-queue();
+    callback edit-queue(int);
+    callback delete-queue(int);
+    callback view-changed(string);
+    callback search-changed();
+    callback sort(string);
+    callback row-activated(int);
+    callback row-clicked(int, bool, bool);
+    callback row-right(int);
+    callback row-drag(int, int);
+    callback row-drag-out(int);
+    // arrow keys: select the previous (-1) or next (+1) visible download
+    callback move-selection(int, bool);
+    // the list's columns (order + widths); dragging in the header changes them
+    in property <[ColDef]> columns;
+    callback column-resized(int, length);
+    callback column-dropped(int, length);
+    callback columns-changed();
+    pure function col-title(k: string) -> string {
+        if (k == "name") { return @tr("File Name"); }
+        if (k == "q") { return @tr("Q"); }
+        if (k == "size") { return @tr("Size"); }
+        if (k == "status") { return @tr("Status"); }
+        if (k == "eta") { return @tr("Time left"); }
+        if (k == "speed") { return @tr("Transfer rate"); }
+        if (k == "last") { return @tr("Last Try Date"); }
+        if (k == "desc") { return @tr("Description"); }
+        if (k == "added") { return @tr("Date Added"); }
+        if (k == "saveto") { return @tr("Save To"); }
+        if (k == "referer") { return @tr("Referer"); }
+        if (k == "parent") { return @tr("Parent Web Page"); }
+        return k;
+    }
+    pure function col-sort-key(k: string) -> string {
+        if (k == "q") { return ""; }
+        if (k == "last") { return "date"; }
+        return k;
+    }
+    callback select-all();
+    callback row-action(int, string);
+    callback row-to-queue(int, int);
+    callback open-download-folder();
+    callback export-list(string);
+    callback import-list(string);
+    callback set-theme(int);
+    callback set-language(string);
+    callback toggle-categories();
+    callback set-toolbar-small(bool);
+    callback open-columns();
+    callback update-tools();
+    callback check-app-update();
+    callback set-all-done(int);
+    callback add-category();
+    callback category-props(string);
+    callback delete-category(string);
+    callback find();
+    callback find-next();
+    callback grabber();
+    callback playlist();
+    callback torrent();
+    callback browsers();
+    callback tips();
+    callback about();
+    callback quit();
+
+    MenuBar {
+        Menu {
+            title: @tr("Tasks");
+            MenuItem {
+                title: @tr("Add new download…");
+                activated => {
+                    root.add-url();
+                }
+            }
+            MenuItem {
+                title: @tr("Add batch download…");
+                activated => {
+                    root.add-batch();
+                }
+            }
+            MenuItem {
+                title: @tr("Add batch download from clipboard");
+                activated => {
+                    root.add-batch-clipboard();
+                }
+            }
+            MenuItem {
+                title: @tr("Run site grabber…");
+                activated => {
+                    root.grabber();
+                }
+            }
+            MenuItem {
+                title: @tr("Download a playlist…");
+                activated => {
+                    root.playlist();
+                }
+            }
+            MenuItem {
+                title: @tr("Add a torrent / magnet link…");
+                activated => {
+                    root.torrent();
+                }
+            }
+            MenuSeparator { }
+            Menu {
+                title: @tr("Export");
+                MenuItem {
+                    title: @tr("To download list file (.ef2)…");
+                    activated => {
+                        root.export-list("ef2");
+                    }
+                }
+                MenuItem {
+                    title: @tr("To text file…");
+                    activated => {
+                        root.export-list("txt");
+                    }
+                }
+            }
+            Menu {
+                title: @tr("Import");
+                MenuItem {
+                    title: @tr("From download list file (.ef2)…");
+                    activated => {
+                        root.import-list("ef2");
+                    }
+                }
+                MenuItem {
+                    title: @tr("From text file…");
+                    activated => {
+                        root.import-list("txt");
+                    }
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("Open download folder");
+                activated => {
+                    root.open-download-folder();
+                }
+            }
+            MenuItem {
+                title: Theme.native-macos ? @tr("Quit Mac Downloader") : @tr("Exit");
+                activated => {
+                    root.quit();
+                }
+            }
+        }
+        Menu {
+            title: @tr("File");
+            MenuItem {
+                title: @tr("Download now");
+                enabled: root.can-resume;
+                activated => {
+                    root.resume(root.selected-id);
+                }
+            }
+            MenuItem {
+                title: @tr("Stop download");
+                enabled: root.can-stop;
+                activated => {
+                    root.pause(root.selected-id);
+                }
+            }
+            MenuItem {
+                title: @tr("Remove");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.delete(root.selected-id);
+                }
+            }
+            MenuItem {
+                title: @tr("Redownload");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.row-action(root.selected-id, "restart");
+                }
+            }
+            MenuItem {
+                title: @tr("Refresh download address…");
+                enabled: root.selected-id >= 0 && root.selected-state != 3;
+                activated => {
+                    root.row-action(root.selected-id, "refresh");
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("Open");
+                enabled: root.selected-state == 3;
+                activated => {
+                    root.row-action(root.selected-id, "open");
+                }
+            }
+            MenuItem {
+                title: @tr("Open with…");
+                enabled: root.selected-state == 3;
+                activated => {
+                    root.row-action(root.selected-id, "openwith");
+                }
+            }
+            MenuItem {
+                title: @tr("Play while downloading");
+                enabled: root.selected-id >= 0 && root.selected-state != 3;
+                activated => {
+                    root.row-action(root.selected-id, "preview");
+                }
+            }
+            MenuItem {
+                title: Theme.native-macos ? @tr("Show in Finder") : @tr("Open folder");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.row-action(root.selected-id, "folder");
+                }
+            }
+            MenuItem {
+                title: @tr("Move / Rename…");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.row-action(root.selected-id, "move");
+                }
+            }
+            MenuItem {
+                title: @tr("Copy address");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.row-action(root.selected-id, "copy");
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("Select All");
+                activated => {
+                    root.select-all();
+                }
+            }
+            MenuItem {
+                title: @tr("Properties");
+                enabled: root.selected-id >= 0;
+                activated => {
+                    root.row-action(root.selected-id, "properties");
+                }
+            }
+        }
+        Menu {
+            title: @tr("Downloads");
+            MenuItem {
+                title: @tr("Resume all");
+                activated => {
+                    root.resume-all();
+                }
+            }
+            MenuItem {
+                title: @tr("Stop all");
+                activated => {
+                    root.stop-all();
+                }
+            }
+            MenuItem {
+                title: @tr("Delete all completed");
+                activated => {
+                    root.delete-completed();
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("Find…");
+                activated => {
+                    root.find();
+                }
+            }
+            MenuItem {
+                title: @tr("Find next   F3");
+                activated => {
+                    root.find-next();
+                }
+            }
+            MenuSeparator { }
+            Menu {
+                title: @tr("Start queue");
+                for q in root.queues: MenuItem {
+                    title: q.name;
+                    activated => {
+                        root.start-queue(q.id);
+                    }
+                }
+            }
+            Menu {
+                title: @tr("Stop queue");
+                for q in root.queues: MenuItem {
+                    title: q.name;
+                    activated => {
+                        root.stop-queue(q.id);
+                    }
+                }
+            }
+            Menu {
+                title: @tr("Speed Limiter");
+                MenuItem {
+                    // a mark in the name, not "checkable": a checkable item flips by itself
+                    // and then keeps its mark (two marks at once)
+                    title: (root.limiter-on ? "● " : "○ ") + @tr("Turn on");
+                    activated => {
+                        if (!root.limiter-on) {
+                            root.toggle-limiter();
+                        }
+                    }
+                }
+                MenuItem {
+                    title: (!root.limiter-on ? "● " : "○ ") + @tr("Turn off");
+                    activated => {
+                        if (root.limiter-on) {
+                            root.toggle-limiter();
+                        }
+                    }
+                }
+                MenuSeparator { }
+                MenuItem {
+                    title: @tr("Settings…");
+                    activated => {
+                        root.open-limiter();
+                    }
+                }
+            }
+            Menu {
+                title: @tr("When all downloads finish");
+                MenuItem {
+                    title: (root.all-done == 0 ? "● " : "○ ") + @tr("Do nothing");
+                    activated => {
+                        root.set-all-done(0);
+                    }
+                }
+                MenuItem {
+                    title: (root.all-done == 1 ? "● " : "○ ") + @tr("Shut down the computer");
+                    activated => {
+                        root.set-all-done(1);
+                    }
+                }
+                MenuItem {
+                    title: (root.all-done == 2 ? "● " : "○ ") + @tr("Sleep");
+                    activated => {
+                        root.set-all-done(2);
+                    }
+                }
+                MenuItem {
+                    title: (root.all-done == 4 ? "● " : "○ ") + @tr("Hibernate");
+                    activated => {
+                        root.set-all-done(4);
+                    }
+                }
+                MenuItem {
+                    title: (root.all-done == 3 ? "● " : "○ ") + @tr("Exit Mac Downloader");
+                    activated => {
+                        root.set-all-done(3);
+                    }
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("Scheduler…");
+                activated => {
+                    root.open-scheduler();
+                }
+            }
+            MenuItem {
+                title: @tr("Settings…");
+                activated => {
+                    root.open-settings(0);
+                }
+            }
+        }
+        Menu {
+            title: @tr("View");
+            MenuItem {
+                title: root.hide-categories ? @tr("Show Sidebar") : @tr("Hide Sidebar");
+                activated => {
+                    root.toggle-categories();
+                }
+            }
+            Menu {
+                title: @tr("Arrange files");
+                for a in [
+                    { key: "added", title: @tr("By order of addition") },
+                    { key: "name", title: @tr("File name") },
+                    { key: "size", title: @tr("Size") },
+                    { key: "status", title: @tr("Status") },
+                    { key: "eta", title: @tr("Time left") },
+                    { key: "speed", title: @tr("Transfer rate") },
+                    { key: "date", title: @tr("Last try date") },
+                    { key: "desc", title: @tr("Description") },
+                    { key: "saveto", title: @tr("Save to") },
+                    { key: "referer", title: @tr("Referer") },
+                    { key: "parent", title: @tr("Parent web page") }
+                ]: MenuItem {
+                    title: (root.sort-by == a.key ? "● " : "○ ") + a.title;
+                    activated => {
+                        root.sort(a.key);
+                    }
+                }
+            }
+            Menu {
+                title: @tr("Download List");
+                MenuItem {
+                    title: (!root.detailed-list ? "● " : "○ ") + @tr("List");
+                    activated => { root.detailed-list = false; }
+                }
+                MenuItem {
+                    title: (root.detailed-list ? "● " : "○ ") + @tr("Details");
+                    activated => { root.detailed-list = true; }
+                }
+            }
+            MenuItem {
+                title: @tr("Columns…");
+                activated => {
+                    root.detailed-list = true;
+                    root.open-columns();
+                }
+            }
+            Menu {
+                title: @tr("Language");
+                MenuItem {
+                    title: (root.language == "en" ? "● " : "○ ") + "English";
+                    activated => {
+                        root.set-language("en");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "ar" ? "● " : "○ ") + "العربية";
+                    activated => {
+                        root.set-language("ar");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "fr" ? "● " : "○ ") + "Français";
+                    activated => {
+                        root.set-language("fr");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "es" ? "● " : "○ ") + "Español";
+                    activated => {
+                        root.set-language("es");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "de" ? "● " : "○ ") + "Deutsch";
+                    activated => {
+                        root.set-language("de");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "pt" ? "● " : "○ ") + "Português";
+                    activated => {
+                        root.set-language("pt");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "tr" ? "● " : "○ ") + "Türkçe";
+                    activated => {
+                        root.set-language("tr");
+                    }
+                }
+                MenuItem {
+                    title: (root.language == "ru" ? "● " : "○ ") + "Русский";
+                    activated => {
+                        root.set-language("ru");
+                    }
+                }
+            }
+            Menu {
+                title: @tr("Appearance");
+                for choice in [{ name: @tr("System"), value: 0 }, { name: @tr("Light"), value: 1 }, { name: @tr("Dark"), value: 2 }]: MenuItem {
+                    title: (Theme.appearance == choice.value ? "● " : "○ ") + choice.name;
+                    activated => { root.set-theme(choice.value); }
+                }
+                MenuSeparator { }
+                MenuItem { title: @tr("Appearance…"); activated => { root.open-settings(9); } }
+            }
+        }
+        Menu {
+            title: @tr("Help");
+            MenuItem {
+                title: @tr("Add Mac Downloader to my browser…");
+                activated => {
+                    root.browsers();
+                }
+            }
+            MenuItem {
+                title: @tr("Tip of the day…");
+                activated => {
+                    root.tips();
+                }
+            }
+            MenuItem {
+                title: @tr("Check for updates");
+                activated => {
+                    root.check-app-update();
+                }
+            }
+            MenuItem {
+                title: @tr("Check for updates (video downloader)");
+                activated => {
+                    root.update-tools();
+                }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: @tr("About Mac Downloader");
+                activated => {
+                    root.about();
+                }
+            }
+        }
+    }
+
+    function category-menu(target: string, a: string) {
+        if (a == "add") {
+            root.add-category();
+        } else if (a == "delete") {
+            root.delete-category(target);
+        } else if (a == "props") {
+            root.category-props(target);
+        }
+    }
+    function queue-menu-action(q: int, a: string) {
+        if (a == "start") {
+            root.start-queue(q);
+        } else if (a == "stop") {
+            root.stop-queue(q);
+        } else if (a == "edit") {
+            root.edit-queue(q);
+        } else if (a == "new") {
+            root.new-queue();
+        } else if (a == "delete") {
+            root.delete-queue(q);
+        }
+    }
+
+    if root.has-bg-image: Image {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        source: root.bg-image;
+        image-fit: cover;
+    }
+    property <bool> detailed-list: false;
+    more-menu := PopupWindow {
+        x: max(8px, root.width - 290px);
+        y: 48px;
+        width: 270px;
+        height: more-items.preferred-height;
+        MenuPanel {
+            width: parent.width;
+            height: more-items.preferred-height;
+            more-items := VerticalLayout {
+                padding: 5px;
+                spacing: 0px;
+                MenuEntry { text: @tr("Add batch download…"); glyph: "copy"; clicked => { more-menu.close(); root.add-batch(); } }
+                MenuEntry { text: @tr("Download a playlist…"); glyph: "queue"; clicked => { more-menu.close(); root.playlist(); } }
+                MenuEntry { text: @tr("Add a torrent / magnet link…"); glyph: "torrent"; clicked => { more-menu.close(); root.torrent(); } }
+                MenuEntry { text: @tr("Run site grabber…"); glyph: "globe"; clicked => { more-menu.close(); root.grabber(); } }
+                MenuSep { }
+                MenuEntry { text: @tr("Resume all"); glyph: "play"; clicked => { more-menu.close(); root.resume-all(); } }
+                MenuEntry { text: @tr("Stop all"); glyph: "pause"; clicked => { more-menu.close(); root.stop-all(); } }
+                MenuEntry { text: @tr("Scheduler…"); glyph: "clock"; clicked => { more-menu.close(); root.open-scheduler(); } }
+                MenuEntry { text: root.limiter-on ? @tr("Speed Limiter: On") : @tr("Speed Limiter: Off"); glyph: "gauge"; clicked => { more-menu.close(); root.open-limiter(); } }
+                MenuSep { }
+                MenuEntry { text: root.detailed-list ? @tr("Compact List") : @tr("Details View"); glyph: root.detailed-list ? "queue" : "table"; clicked => { more-menu.close(); root.detailed-list = !root.detailed-list; } }
+                MenuEntry { text: @tr("Open download folder"); glyph: "folder"; clicked => { more-menu.close(); root.open-download-folder(); } }
+                MenuEntry { text: @tr("Add Mac Downloader to my browser…"); glyph: "puzzle"; clicked => { more-menu.close(); root.browsers(); } }
+                MenuEntry { text: @tr("Settings…"); glyph: "settings"; clicked => { more-menu.close(); root.open-settings(0); } }
+            }
+        }
+    }
+    // Slint normalizes macOS Command to modifiers.control.
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.modifiers.control && (event.text == "a" || event.text == "A")) { root.select-all(); return accept; }
+            if ((event.text == Key.Delete || (event.text == Key.Backspace && (event.modifiers.control || event.modifiers.meta))) && root.selected-id >= 0) { root.delete(root.selected-id); return accept; }
+            if (event.text == Key.Return && root.selected-id >= 0) { root.row-activated(root.selected-id); return accept; }
+            if (event.text == Key.UpArrow) { root.move-selection(-1, event.modifiers.shift); return accept; }
+            if (event.text == Key.DownArrow) { root.move-selection(1, event.modifiers.shift); return accept; }
+            if (event.text == Key.F3) { root.find-next(); return accept; }
+            if (event.modifiers.control && (event.text == "f" || event.text == "F")) { search-box.focus(); return accept; }
+            if (event.modifiers.control && (event.text == "n" || event.text == "N")) { root.add-url(); return accept; }
+            if (event.modifiers.control && (event.text == "b" || event.text == "B")) { root.add-batch(); return accept; }
+            if (Theme.native-macos && event.modifiers.control && event.text == ",") { root.open-settings(0); return accept; }
+            reject
+        }
+        HorizontalLayout {
+            spacing: 0px;
+            // ---------------------------------------------------- sidebar
+            if !root.hide-categories: Rectangle {
+                width: 216px * max(1, min(1.3, Theme.font-scale));
+                background: Theme.sidebar;
+                accessible-role: navigation;
+                accessible-label: @tr("Sidebar");
+                Flickable {
+                    x: 0px;
+                    y: 0px;
+                    width: parent.width;
+                    height: parent.height;
+                    sidebar-items := VerticalLayout {
+                        alignment: start;
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        padding-top: 10px;
+                        padding-bottom: 14px;
+                        spacing: 1px;
+                        SidebarHeading { text: @tr("Library"); }
+                        CtxTreeItem { text: @tr("All Downloads"); icon: "tray"; count: root.count-all; selected: root.view == "all"; builtin: true; clicked => { root.view = "all"; root.view-changed(root.view); } chosen(a) => { root.category-menu("", a); } }
+                        TreeItem { text: @tr("Unfinished"); icon: "arrow-circle"; count: root.count-unfinished; selected: root.view == "unfinished"; clicked => { root.view = "unfinished"; root.view-changed(root.view); } }
+                        TreeItem { text: @tr("Finished"); icon: "check-circle"; count: root.count-finished; selected: root.view == "finished"; clicked => { root.view = "finished"; root.view-changed(root.view); } }
+                        Rectangle { height: 10px; }
+                        SidebarHeading { text: @tr("File Types"); action-label: @tr("Add category…"); action => { root.add-category(); } }
+                        for c in root.categories: CtxTreeItem {
+                            text: c.label; icon: c.kind; category-icon: true; count: c.count; target: c.name; builtin: c.builtin;
+                            selected: root.view == "cat:" + c.name;
+                            clicked => { root.view = "cat:" + c.name; root.view-changed(root.view); }
+                            chosen(a) => { root.category-menu(c.name, a); }
+                        }
+                        Rectangle { height: 10px; }
+                        SidebarHeading { text: @tr("Queues"); action-label: @tr("New queue"); action => { root.new-queue(); } }
+                        for q in root.queues: CtxTreeItem {
+                            is-queue: true; builtin: q.id == 1; target: q.name;
+                            text: q.name; icon: q.running ? "play" : "queue"; count: q.count > 0 ? q.count : "";
+                            selected: root.view == "queue:" + q.id;
+                            clicked => { root.view = "queue:" + q.id; root.view-changed(root.view); }
+                            toggle => { root.edit-queue(q.id); }
+                            chosen(a) => { root.queue-menu-action(q.id, a); }
+                        }
+                    }
+                }
+            }
+            if !root.hide-categories: Rectangle { width: 1px; background: Theme.line; }
+            // ---------------------------------------------------- content
+            Rectangle {
+                horizontal-stretch: 1;
+                background: Theme.panel;
+                VerticalLayout {
+                    spacing: 0px;
+                    // One unified toolbar: where you are, what is happening, and the actions.
+                    Rectangle {
+                        height: max(52px, toolbar.preferred-height);
+                        background: Theme.sidebar;
+                        accessible-role: groupbox;
+                        accessible-label: @tr("Toolbar");
+                        toolbar := HorizontalLayout {
+                            padding-left: 12px;
+                            padding-right: 14px;
+                            padding-top: 8px;
+                            padding-bottom: 8px;
+                            spacing: 6px;
+                            alignment: stretch;
+                            VerticalLayout {
+                                alignment: center;
+                                IconButton {
+                                    glyph: "sidebar";
+                                    tint: Theme.muted;
+                                    label: root.hide-categories ? @tr("Show Sidebar") : @tr("Hide Sidebar");
+                                    clicked => { root.toggle-categories(); }
+                                }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                horizontal-stretch: 3;
+                                min-width: 90px;
+                                padding-left: 4px;
+                                spacing: 1px;
+                                Text {
+                                    text: root.list-title;
+                                    color: Theme.text;
+                                    font-size: Theme.title3-size;
+                                    font-weight: 700;
+                                    overflow: elide;
+                                    accessible-role: text;
+                                }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    Text {
+                                        text: root.sel-count > 1 ? @tr("{} selected", root.sel-count) : root.status-text;
+                                        color: Theme.muted;
+                                        font-size: Theme.caption-size;
+                                        overflow: elide;
+                                        vertical-alignment: center;
+                                        horizontal-stretch: 1;
+                                    }
+                                }
+                            }
+                            if root.limiter-on: VerticalLayout {
+                                alignment: center;
+                                limiter-pill := Rectangle {
+                                    height: 22px * min(1.3, Theme.font-scale);
+                                    min-width: limiter-label.preferred-width + 32px;
+                                    border-radius: self.height / 2;
+                                    background: limiter-hit.has-hover ? Theme.pressed : Theme.fill;
+                                    accessible-role: button;
+                                    accessible-label: root.limiter-text;
+                                    accessible-action-default => { root.open-limiter(); }
+                                    Glyph { x: 8px; y: (parent.height - self.height) / 2; width: 12px; height: 12px; kind: "gauge"; tint: Theme.warn; }
+                                    limiter-label := Text {
+                                        x: 24px;
+                                        height: parent.height;
+                                        text: root.limiter-text;
+                                        color: Theme.text;
+                                        font-size: Theme.caption-size;
+                                        vertical-alignment: center;
+                                    }
+                                    limiter-hit := TouchArea { clicked => { root.open-limiter(); } }
+                                }
+                            }
+                            Rectangle { width: 4px; }
+                            VerticalLayout {
+                                alignment: center;
+                                HorizontalLayout {
+                                    spacing: 2px;
+                                    IconButton { glyph: "play"; glyph-size: 13px; label: @tr("Resume"); enabled: root.can-resume; clicked => { root.resume(root.selected-id); } }
+                                    IconButton { glyph: "pause"; glyph-size: 13px; label: @tr("Pause"); enabled: root.can-stop; clicked => { root.pause(root.selected-id); } }
+                                    IconButton { glyph: "reveal"; label: (Theme.native-macos ? @tr("Show in Finder") : @tr("Show in folder")); enabled: root.selected-id >= 0; clicked => { root.row-action(root.selected-id, "folder"); } }
+                                    IconButton { glyph: "trash"; label: @tr("Remove"); enabled: root.selected-id >= 0; clicked => { root.delete(root.selected-id); } }
+                                }
+                            }
+                            Rectangle { width: 6px; }
+                            VerticalLayout {
+                                alignment: center;
+                                horizontal-stretch: 1;
+                                min-width: 110px;
+                                max-width: 240px;
+                                search-box := SearchField {
+                                    placeholder-text: @tr("Search");
+                                    text <=> root.search;
+                                    edited(t) => { root.search-changed(); }
+                                }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                ToolbarButton { text: @tr("New Download…"); glyph: "plus"; primary: true; clicked => { root.add-url(); } }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                IconButton { glyph: "more"; label: @tr("More Actions"); clicked => { more-menu.show(); } }
+                            }
+                        }
+                    }
+                    Rectangle { height: 1px; background: Theme.line; }
+                    Rectangle {
+                        vertical-stretch: 1;
+                        min-width: 0px;
+                        clip: true;
+                        background: Theme.panel;
+                        accessible-role: main;
+                        VerticalLayout {
+                            padding-left: root.detailed-list ? 0px : 8px;
+                            padding-right: root.detailed-list ? 0px : 8px;
+                            padding-top: root.detailed-list ? 0px : 6px;
+                            if root.detailed-list: Rectangle {
+                                height: 28px * max(1, Theme.font-scale);
+                                background: Theme.panel;
+                                clip: true;
+                                HorizontalLayout {
+                                    x: lv.content-x;
+                                    width: max(parent.width, lv.content-width);
+                                    padding-left: 8px;
+                                    HeaderCell { text: ""; width: 30px; }
+                                    for c[i] in root.columns: HeaderCell {
+                                        width: c.width; adjustable: true; text: root.col-title(c.key); key: root.col-sort-key(c.key);
+                                        align: c.key == "size" || c.key == "eta" || c.key == "speed" ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+                                        sort-by: root.sort-by; sort-desc: root.sort-desc;
+                                        sort(k) => { root.sort(k); }
+                                        resized(w) => { root.column-resized(i, w); }
+                                        resize-done => { root.columns-changed(); }
+                                        dropped(x) => { root.column-dropped(i, x); }
+                                    }
+                                    Rectangle { horizontal-stretch: 1; }
+                                }
+                                Rectangle { y: parent.height - 1px; height: 1px; background: Theme.grid; }
+                            }
+                            lv := ListView {
+                                vertical-stretch: 1;
+                                accessible-role: list;
+                                accessible-label: root.list-title;
+                                for r[i] in root.rows: DownloadItem {
+                                    detailed: root.detailed-list;
+                                    alt: Math.mod(i, 2) == 1;
+                                    data: r; queues: root.queues; cols: root.cols; columns: root.columns; selected: r.sel; sel-count: root.sel-count;
+                                    pick(ctrl, shift) => { root.row-clicked(r.id, ctrl, shift); keys.focus(); }
+                                    right-pick => { root.row-right(r.id); }
+                                    drag(offset) => { root.row-drag(r.id, offset); }
+                                    drag-out => { root.row-drag-out(r.id); }
+                                    activated => { root.row-activated(r.id); }
+                                    action(a) => { root.row-action(r.id, a); }
+                                    move-to-queue(q) => { root.row-to-queue(r.id, q); }
+                                }
+                            }
+                        }
+                        if root.rows.length == 0: EmptyState {
+                            x: 32px;
+                            y: max(24px, (parent.height - self.preferred-height) / 2 - 20px);
+                            width: parent.width - 64px;
+                            height: self.preferred-height;
+                            glyph: root.search != "" ? "search" : "tray";
+                            title: root.search != "" ? @tr("No Matches") : root.view == "all" ? @tr("No Downloads Yet") : @tr("Nothing Here");
+                            message: root.search != "" ? @tr("Nothing matches “{}”.", root.search) : root.view == "all" ? @tr("Add a link or send a download from your browser.") : @tr("Downloads in this list appear here.");
+                            if root.search != "": Button { text: @tr("Clear Search"); clicked => { root.search = ""; root.search-changed(); } }
+                            if root.search == "" && root.view == "all": Button { text: @tr("New Download…"); primary: true; clicked => { root.add-url(); } }
+                            if root.search == "" && root.view == "all": Button { text: @tr("Connect Browser…"); clicked => { root.browsers(); } }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // the label of the toolbar button the mouse rests on (drawn above everything)
+    Timer {
+        interval: 700ms;
+        running: ToolTip.pending;
+        triggered => {
+            ToolTip.pending = false;
+            ToolTip.shown = true;
+        }
+    }
+    if ToolTip.shown && ToolTip.text != "": Rectangle {
+        x: max(6px, min(ToolTip.x, root.width - self.width - 6px));
+        y: ToolTip.y;
+        width: min(300px, tip-text.preferred-width + 16px);
+        height: tip-text.preferred-height + 8px;
+        background: Theme.popover;
+        border-width: 1px;
+        border-color: Theme.grid;
+        border-radius: 5px;
+        drop-shadow-blur: 8px;
+        drop-shadow-color: #00000033;
+        drop-shadow-offset-y: 2px;
+        tip-text := Text {
+            x: 8px;
+            width: parent.width - 16px;
+            text: ToolTip.text;
+            wrap: word-wrap;
+            color: Theme.text;
+            font-size: Theme.footnote-size;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// ------------------------------------------------------------------ dialogs
+
+// "New Download" – shown for downloads typed in, and from the browser when
+// the confirmation is turned on. Advanced options are disclosed on demand.
+export component AddDialog inherits ThemedWindow {
+    header-names-window: true;
+    // set for a moment so the window comes in front of the browser
+    in property <bool> front;
+    always-on-top: root.front;
+    title: @tr("New Download");
+    preferred-width: 540px;
+    min-width: 460px;
+
+    in-out property <string> url;
+    // full path: folder + file name
+    in-out property <string> save-as;
+    in-out property <string> description;
+    in-out property <int> connections: 32;
+    in-out property <int> category-index: 0;
+    in-out property <bool> remember-path;
+    in property <string> category-name: "General";
+    in property <string> kind: "general";
+    in property <string> ext;
+    in property <string> size-text;
+    in property <string> info;
+    in property <bool> probing;
+    in property <bool> info-error;
+    in property <[string]> queue-names: ["Main queue"];
+    in-out property <int> queue-index: 0;
+    in property <[string]> category-names: ["General", "Compressed", "Documents", "Music", "Programs", "Video", "Images"];
+    in-out property <bool> use-login;
+    in-out property <string> user;
+    in-out property <string> password;
+    // a warning about the address (web page, duplicate...)
+    in property <string> warning;
+    // the server refused Mac Downloader: offer the browser instead
+    in property <bool> can-use-browser;
+    callback use-browser();
+
+    callback check-url();
+    callback category-changed(int);
+    callback browse();
+    callback start-now();
+    callback later();
+    callback cancel();
+
+    // Friendly editing fields never show a signed URL or a full local path.
+    in-out property <string> file-name;
+    in property <string> destination;
+    in property <string> source-host;
+    in property <string> name-error;
+    in property <bool> manual-url;
+    in-out property <bool> show-advanced;
+    callback rename-file(string);
+    callback refresh-destination();
+    // the window grows or shrinks with the disclosed options
+    callback advanced-toggled(bool);
+    out property <length> natural-height: dialog-content.preferred-height;
+    property <bool> can-start: root.url != "" && root.name-error == "";
+    property <length> label-width: 92px;
+
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) { root.cancel(); return accept; }
+            reject
+        }
+    dialog-content := VerticalLayout {
+        padding: 20px;
+        padding-bottom: 18px;
+        spacing: 14px;
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 0;
+            KindTile { kind: root.kind; width: 40px; height: 40px; }
+            VerticalLayout {
+                alignment: center;
+                spacing: 2px;
+                Text {
+                    text: @tr("New Download");
+                    font-size: Theme.title2-size;
+                    font-weight: 600;
+                    color: Theme.text;
+                }
+                Text {
+                    text: root.source-host != ""
+                        ? root.source-host + (root.size-text != "" ? "  ·  " + root.size-text : "")
+                        : root.size-text != "" ? root.size-text : @tr("Paste a link, then check it");
+                    color: Theme.muted;
+                    font-size: Theme.footnote-size;
+                    overflow: elide;
+                }
+            }
+        }
+        if root.manual-url: FieldRow {
+            label: @tr("Address");
+            label-width: root.label-width;
+            LineEdit {
+                text <=> root.url;
+                placeholder-text: "https://";
+                horizontal-stretch: 1;
+                accessible-label: @tr("Download link");
+                accepted(t) => { root.check-url(); }
+            }
+            Button { text: @tr("Check"); enabled: root.url != "" && !root.probing; clicked => { root.check-url(); } }
+        }
+        VerticalLayout {
+            spacing: 4px;
+            FieldRow {
+                label: @tr("Name");
+                label-width: root.label-width;
+                LineEdit {
+                    text <=> root.file-name;
+                    placeholder-text: @tr("File name");
+                    horizontal-stretch: 1;
+                    accessible-label: @tr("Name");
+                    edited(t) => { root.rename-file(t); }
+                }
+            }
+            if root.name-error != "": HorizontalLayout {
+                padding-left: root.label-width * min(1.3, Theme.font-scale) + 10px;
+                Notice { text: root.name-error; tone: "error"; }
+            }
+        }
+        FieldRow {
+            label: @tr("Save to");
+            label-width: root.label-width;
+            Rectangle {
+                horizontal-stretch: 1;
+                min-height: 22px;
+                accessible-role: text;
+                accessible-label: @tr("Save location");
+                accessible-value: root.destination;
+                Glyph { x: 0px; y: (parent.height - self.height) / 2; width: 15px; height: 15px; kind: "folder"; tint: Theme.accent-text; }
+                Text {
+                    x: 22px;
+                    width: parent.width - 22px;
+                    height: parent.height;
+                    text: root.destination;
+                    color: Theme.text;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+            Button { text: @tr("Change…"); clicked => { root.browse(); } }
+        }
+        if root.probing || root.info-error || root.warning != "": VerticalLayout {
+            spacing: 6px;
+            padding-left: root.label-width * min(1.3, Theme.font-scale) + 10px;
+            if root.probing: Notice { text: @tr("Checking the file…"); tone: "busy"; }
+            if root.info-error: Notice { text: @tr("Couldn’t check this file. Check the link or try downloading again."); tone: "error"; }
+            if root.warning != "": Notice { text: root.warning; tone: "warn"; }
+            if root.can-use-browser: HorizontalLayout {
+                alignment: start;
+                Button { text: @tr("Download with the browser"); clicked => { root.use-browser(); } }
+            }
+        }
+        HorizontalLayout {
+            vertical-stretch: 0;
+            Disclosure {
+                text: @tr("Options");
+                expanded <=> root.show-advanced;
+                toggled(open) => { root.advanced-toggled(open); }
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+        if root.show-advanced: ScrollView {
+            height: min(300px * min(1.3, Theme.font-scale), advanced-body.preferred-height + 4px);
+            preferred-height: self.height;
+            vertical-stretch: 0;
+            content-width: self.visible-width;
+            content-height: advanced-body.preferred-height;
+            horizontal-scrollbar-policy: ScrollBarPolicy.always-off;
+            advanced-body := VerticalLayout {
+                width: parent.width;
+                height: self.preferred-height;
+                alignment: start;
+                spacing: 10px;
+                padding-right: 6px;
+                if !root.manual-url: FieldRow {
+                    label: @tr("Address");
+                    label-width: root.label-width;
+                    LineEdit {
+                        text <=> root.url;
+                        horizontal-stretch: 1;
+                        accessible-label: @tr("Download link");
+                        accepted(t) => { root.check-url(); }
+                    }
+                    Button { text: @tr("Check"); enabled: root.url != "" && !root.probing; clicked => { root.check-url(); } }
+                }
+                FieldRow {
+                    label: @tr("Category");
+                    label-width: root.label-width;
+                    ComboBox {
+                        horizontal-stretch: 1;
+                        model: root.category-names;
+                        current-index <=> root.category-index;
+                        selected(v) => { root.category-changed(root.category-index); }
+                    }
+                    Text {
+                        text: @tr("Queue");
+                        color: Theme.text;
+                        vertical-alignment: center;
+                    }
+                    ComboBox { horizontal-stretch: 1; model: root.queue-names; current-index <=> root.queue-index; }
+                }
+                FieldRow {
+                    label: @tr("Full path");
+                    label-width: root.label-width;
+                    LineEdit {
+                        text <=> root.save-as;
+                        horizontal-stretch: 1;
+                        accessible-label: @tr("Save As");
+                        edited(t) => { root.refresh-destination(); }
+                    }
+                }
+                HorizontalLayout {
+                    padding-left: root.label-width * min(1.3, Theme.font-scale) + 10px;
+                    CheckBox {
+                        text: @tr("Remember this path for \"{}\" category", root.category-name);
+                        checked <=> root.remember-path;
+                    }
+                }
+                FieldRow {
+                    label: @tr("Description");
+                    label-width: root.label-width;
+                    LineEdit { text <=> root.description; horizontal-stretch: 1; placeholder-text: @tr("optional note"); accessible-label: @tr("Description"); }
+                }
+                FieldRow {
+                    label: @tr("Connections");
+                    label-width: root.label-width;
+                    SpinBox { minimum: 1; maximum: 32; value <=> root.connections; accessible-label: @tr("Connections"); }
+                    Rectangle { horizontal-stretch: 1; }
+                }
+                HorizontalLayout {
+                    padding-left: root.label-width * min(1.3, Theme.font-scale) + 10px;
+                    CheckBox { text: @tr("Use authorization"); checked <=> root.use-login; }
+                }
+                if root.use-login: FieldRow {
+                    label: @tr("Login");
+                    label-width: root.label-width;
+                    LineEdit { text <=> root.user; placeholder-text: @tr("Login"); horizontal-stretch: 1; accessible-label: @tr("Login"); }
+                    LineEdit { text <=> root.password; placeholder-text: @tr("Password"); input-type: InputType.password; horizontal-stretch: 1; accessible-label: @tr("Password"); }
+                }
+                if !root.info-error && root.info != "": HorizontalLayout {
+                    padding-left: root.label-width * min(1.3, Theme.font-scale) + 10px;
+                    Text {
+                        text: root.info;
+                        color: Theme.muted;
+                        font-size: Theme.footnote-size;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+        Rectangle { vertical-stretch: 1; min-height: 0px; preferred-height: 0px; }
+        HorizontalLayout {
+            vertical-stretch: 0;
+            spacing: 8px;
+            Button {
+                text: @tr("Download Later");
+                enabled: root.can-start;
+                clicked => { root.later(); }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Button { text: @tr("Cancel"); clicked => { root.cancel(); } }
+            Button {
+                text: @tr("Download");
+                primary: true;
+                enabled: root.can-start;
+                clicked => { root.start-now(); }
+            }
+        }
+    }
+    }
+}
+
+export component BatchDialog inherits ThemedWindow {
+    header-names-window: true;
+    // set for a moment so the window comes in front of the browser
+    in property <bool> front;
+    always-on-top: root.front;
+    title: @tr("Add batch download");
+    preferred-width: 620px;
+    preferred-height: 540px;
+    min-width: 520px;
+    min-height: 420px;
+
+    // 0: list of links, 1: address with a * pattern
+    in-out property <int> mode: 0;
+    in-out property <string> links;
+    in-out property <string> folder;
+    in property <[string]> queue-names: ["Main queue"];
+    in-out property <int> queue-index: 0;
+    in-out property <bool> start-now: true;
+    in property <string> message;
+    // pattern
+    in-out property <string> pattern;
+    in-out property <bool> letters;
+    in-out property <string> from-text: "1";
+    in-out property <string> to-text: "10";
+    in-out property <int> wildcard-size: 1;
+    in-out property <string> user;
+    in-out property <string> password;
+    in property <string> preview;
+
+    callback paste();
+    callback browse();
+    callback pattern-changed();
+    callback ok();
+    callback cancel();
+
+    VerticalLayout {
+        padding: 20px;
+        spacing: 14px;
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: @tr("Add batch download");
+                font-size: Theme.title2-size;
+                font-weight: 600;
+                color: Theme.text;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            SegmentedBar {
+                Segment { text: @tr("List of links"); active: root.mode == 0; clicked => { root.mode = 0; } }
+                Segment { text: @tr("Address with a pattern (*)"); active: root.mode == 1; clicked => { root.mode = 1; root.pattern-changed(); } }
+            }
+        }
+        if root.mode == 0: VerticalLayout {
+            spacing: 8px;
+            vertical-stretch: 1;
+            Text {
+                text: @tr("Paste the links, one per line. They download one after another in the queue you choose.");
+                wrap: word-wrap;
+                color: Theme.muted;
+                font-size: Theme.footnote-size;
+            }
+            TextEdit {
+                text <=> root.links;
+                vertical-stretch: 1;
+                min-height: 160px;
+                font-size: Theme.body-size;
+                accessible-label: @tr("List of links");
+            }
+            HorizontalLayout {
+                alignment: start;
+                Button {
+                    text: @tr("Paste from clipboard");
+                    clicked => {
+                        root.paste();
+                    }
+                }
+            }
+        }
+        if root.mode == 1: VerticalLayout {
+            spacing: 10px;
+            vertical-stretch: 1;
+            Text {
+                text: @tr("Type an address with a * where the number (or letter) goes, for example\nhttps://www.site.com/pictures/img*.jpg");
+                wrap: word-wrap;
+                color: Theme.muted;
+                font-size: Theme.footnote-size;
+            }
+            LineEdit {
+                text <=> root.pattern;
+                placeholder-text: @tr("https://www.site.com/pictures/img*.jpg");
+                accessible-label: @tr("Address with a pattern (*)");
+                edited(t) => {
+                    root.pattern-changed();
+                }
+            }
+            HorizontalLayout {
+                spacing: 8px;
+                Text { text: @tr("From"); vertical-alignment: center; color: Theme.text; }
+                LineEdit { width: 72px; text <=> root.from-text; accessible-label: @tr("From"); edited(t) => { root.pattern-changed(); } }
+                Text { text: @tr("To"); vertical-alignment: center; color: Theme.text; }
+                LineEdit { width: 72px; text <=> root.to-text; accessible-label: @tr("To"); edited(t) => { root.pattern-changed(); } }
+                Text { text: @tr("Wildcard size"); vertical-alignment: center; color: Theme.text; }
+                SpinBox { width: 80px; minimum: 1; maximum: 10; value <=> root.wildcard-size; edited(v) => { root.pattern-changed(); } }
+                Rectangle { horizontal-stretch: 1; }
+            }
+            HorizontalLayout {
+                spacing: 16px;
+                CheckBox {
+                    text: @tr("Letters (a-z) instead of numbers");
+                    checked <=> root.letters;
+                    toggled => {
+                        root.pattern-changed();
+                    }
+                }
+                Text {
+                    text: @tr("Wildcard size 3 makes 001, 002 … 010.");
+                    color: Theme.muted;
+                    font-size: Theme.footnote-size;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    overflow: elide;
+                }
+            }
+            HorizontalLayout {
+                spacing: 8px;
+                LineEdit { text <=> root.user; placeholder-text: @tr("Login") + " (" + @tr("optional") + ")"; horizontal-stretch: 1; accessible-label: @tr("Login"); }
+                LineEdit { text <=> root.password; placeholder-text: @tr("Password"); input-type: InputType.password; horizontal-stretch: 1; accessible-label: @tr("Password"); }
+            }
+            ListFrame {
+                vertical-stretch: 1;
+                min-height: 70px;
+                Text {
+                    x: 10px;
+                    y: 8px;
+                    width: parent.width - 20px;
+                    text: root.preview;
+                    font-size: Theme.footnote-size;
+                    color: Theme.muted;
+                    wrap: word-wrap;
+                }
+            }
+        }
+        GridLayout {
+            spacing-horizontal: 10px;
+            spacing-vertical: 8px;
+            Row {
+                Text { text: @tr("Save all to"); vertical-alignment: center; horizontal-alignment: right; color: Theme.text; }
+                HorizontalLayout {
+                    spacing: 6px;
+                    LineEdit {
+                        text <=> root.folder;
+                        placeholder-text: @tr("automatic (by file type)");
+                        horizontal-stretch: 1;
+                        accessible-label: @tr("Save all to");
+                    }
+                    Button { text: @tr("Choose…"); clicked => { root.browse(); } }
+                }
+            }
+            Row {
+                Text { text: @tr("Queue"); vertical-alignment: center; horizontal-alignment: right; color: Theme.text; }
+                HorizontalLayout {
+                    spacing: 12px;
+                    ComboBox { model: root.queue-names; current-index <=> root.queue-index; }
+                    CheckBox { text: @tr("Start the queue now"); checked <=> root.start-now; }
+                    Rectangle { horizontal-stretch: 1; }
+                }
+            }
+        }
+        if root.message != "": Notice { text: root.message; tone: "error"; }
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: end;
+            Button { text: @tr("Cancel"); clicked => { root.cancel(); } }
+            Button { text: @tr("Add"); primary: true; clicked => { root.ok(); } }
+        }
+    }
+}
+
+// The compact background transfer monitor. One name, one status, one bar;
+// the inspector (connections, limit, completion) is disclosed on demand.
+export component DetailsDialog inherits ThemedWindow {
+    header-names-window: true;
+    // set for a moment so the window comes in front of the browser
+    in property <bool> front;
+    always-on-top: root.front;
+    title: root.name != "" ? root.name : @tr("Download");
+    preferred-width: 440px;
+    min-width: 360px * min(1.3, Theme.font-scale);
+    // macOS supplies a native title bar and resize handles.
+    in property <bool> native-frame: false;
+    no-frame: !root.native-frame;
+
+    in property <string> name;
+    in property <string> percent;
+    in property <string> url;
+    in property <string> status;
+    in property <string> size;
+    in property <string> downloaded;
+    in property <string> speed;
+    in property <string> eta;
+    in property <string> resumable;
+    in property <bool> resumable-ok;
+    in property <string> error;
+    in property <string> kind: "general";
+    in property <float> progress;
+    in property <int> state;
+    in property <[SegView]> segs;
+    in-out property <bool> show-details: false;
+    in-out property <int> tab: 0;
+    // speed limiter tab
+    in-out property <bool> limit-on;
+    in-out property <int> limit-kb: 500;
+    // options on completion tab
+    in-out property <int> when-done: 0;
+    in-out property <bool> complete-dialog: true;
+    in-out property <bool> force-close;
+    // the height the content needs (the window follows it)
+    out property <length> natural-height: frame.preferred-height;
+
+    callback details-toggled(bool);
+    callback pause();
+    callback resume();
+    callback cancel-download();
+    callback close-window();
+    callback hide-to-tray();
+    callback limit-changed();
+    callback completion-changed();
+    // title bar: move the window / minimize / the X
+    callback start-drag();
+    callback minimize();
+    callback close-clicked();
+    callback start-resize();
+
+    property <bool> known: root.percent != "—" && root.percent != "";
+    property <bool> running: root.state == 1;
+    property <string> amount: root.known ? @tr("{} of {}", root.downloaded, root.size) : @tr("{} downloaded", root.downloaded);
+    property <string> status-line: root.state == 2 ? @tr("Paused")
+        : root.running && root.speed != "—" && root.speed != "" ? root.status + "  ·  " + root.speed
+        : root.status;
+    property <bool> tray-tip;
+    property <bool> tray-hover;
+    tip-timer := Timer {
+        interval: 600ms;
+        running: root.tray-hover && !root.tray-tip;
+        triggered => {
+            root.tray-tip = true;
+        }
+    }
+
+    Rectangle {
+        border-width: root.native-frame ? 0px : 1px;
+        border-color: Theme.line;
+    }
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) { root.close-window(); return accept; }
+            if (event.text == " " && (root.state == 0 || root.state == 1)) { root.pause(); return accept; }
+            if (event.text == " " && (root.state == 2 || root.state == 4)) { root.resume(); return accept; }
+            reject
+        }
+    frame := VerticalLayout {
+      padding: 1px;
+      spacing: 0px;
+      if !root.native-frame: Rectangle {
+        height: 30px;
+        background: Theme.window;
+        HorizontalLayout {
+            spacing: 0px;
+            Rectangle {
+                horizontal-stretch: 1;
+                drag := TouchArea {
+                    pointer-event(ev) => {
+                        if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                            root.start-drag();
+                        }
+                    }
+                }
+                HorizontalLayout {
+                    padding-left: 10px;
+                    spacing: 7px;
+                    Image {
+                        source: @image-url("icon-window.png");
+                        width: 16px;
+                        height: 16px;
+                        y: 7px;
+                    }
+                    Text {
+                        text: @tr("Download");
+                        vertical-alignment: center;
+                        overflow: elide;
+                        color: Theme.muted;
+                        horizontal-stretch: 1;
+                    }
+                }
+            }
+            CaptionButton {
+                kind: "tray";
+                visible: root.state != 3;
+                width: root.state != 3 ? 44px : 0px;
+                changed hovered => {
+                    root.tray-hover = self.hovered;
+                    if (!self.hovered) {
+                        root.tray-tip = false;
+                    }
+                }
+                clicked => {
+                    root.tray-tip = false;
+                    root.hide-to-tray();
+                }
+            }
+            CaptionButton {
+                kind: "min";
+                clicked => {
+                    root.minimize();
+                }
+            }
+            CaptionButton {
+                kind: "close";
+                clicked => {
+                    root.close-clicked();
+                }
+            }
+        }
+      }
+      VerticalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        spacing: 10px;
+        HorizontalLayout {
+            vertical-stretch: 0;
+            spacing: 12px;
+            Rectangle {
+                width: 36px;
+                KindTile { kind: root.kind; y: (parent.height - self.height) / 2; width: 36px; height: 36px; }
+            }
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                spacing: 2px;
+                Text {
+                    text: root.name;
+                    font-size: Theme.body-size;
+                    font-weight: 600;
+                    color: Theme.text;
+                    overflow: elide;
+                }
+                Text {
+                    text: root.status-line;
+                    font-size: Theme.footnote-size;
+                    color: root.state == 4 ? Theme.err : Theme.muted;
+                    overflow: elide;
+                    accessible-role: text;
+                }
+            }
+            if root.known: Text {
+                text: root.percent;
+                color: Theme.text;
+                font-size: Theme.title3-size;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+        }
+        if root.known && root.state != 3: ProgressBar {
+            vertical-stretch: 0;
+            height: 6px;
+            value: root.progress;
+            state: root.state == 0 ? 2 : root.state;
+            accessible-label: @tr("Download Progress");
+        }
+        HorizontalLayout {
+            vertical-stretch: 0;
+            spacing: 12px;
+            Text {
+                text: root.amount;
+                color: Theme.muted;
+                font-size: Theme.footnote-size;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            if root.running && root.known && root.eta != "—" && root.eta != "": Text {
+                text: @tr("{} left", root.eta);
+                color: Theme.muted;
+                font-size: Theme.footnote-size;
+                horizontal-alignment: right;
+            }
+        }
+        if root.error != "": Notice { text: root.error; tone: "error"; }
+        if root.show-details: VerticalLayout {
+          spacing: 10px;
+          vertical-stretch: 1;
+          Rectangle { height: 1px; background: Theme.grid; }
+          SegmentedBar {
+            Segment { text: @tr("Connections"); active: root.tab == 0; clicked => { root.tab = 0; } }
+            Segment { text: @tr("Speed Limit"); active: root.tab == 1; clicked => { root.tab = 1; } }
+            Segment { text: @tr("When Finished"); active: root.tab == 2; clicked => { root.tab = 2; } }
+          }
+          ScrollView {
+            vertical-stretch: 1;
+            min-height: 120px;
+            preferred-height: min(250px * min(1.3, Theme.font-scale), progress-body.preferred-height + 4px);
+            content-width: self.visible-width;
+            content-height: progress-body.preferred-height;
+            horizontal-scrollbar-policy: ScrollBarPolicy.always-off;
+            accessible-role: tab-panel;
+            progress-body := VerticalLayout {
+                width: parent.width;
+                height: self.preferred-height;
+                alignment: start;
+                spacing: 10px;
+                padding-right: 6px;
+                if root.tab == 0: VerticalLayout {
+                    alignment: start;
+                    spacing: 8px;
+                    GridLayout {
+                        spacing-horizontal: 10px;
+                        spacing-vertical: 6px;
+                        Row {
+                            Text { text: @tr("Address"); color: Theme.muted; font-size: Theme.footnote-size; vertical-alignment: center; }
+                            QuietField { text: root.url; read-only: true; label: @tr("Download link"); }
+                        }
+                        Row {
+                            Text { text: @tr("Resume capability"); color: Theme.muted; font-size: Theme.footnote-size; vertical-alignment: center; }
+                            Text { text: root.resumable; color: root.resumable-ok ? Theme.ok : Theme.err; font-size: Theme.footnote-size; vertical-alignment: center; }
+                        }
+                    }
+                    if root.segs.length > 0: Text { text: @tr("Start positions and download progress by connections"); color: Theme.muted; font-size: Theme.footnote-size; wrap: word-wrap; }
+                    if root.segs.length > 0: Rectangle {
+                        height: 10px;
+                        border-radius: 3px;
+                        background: Theme.bar-bg;
+                        clip: true;
+                        accessible-role: image;
+                        accessible-label: @tr("Start positions and download progress by connections");
+                        for s in root.segs: Rectangle {
+                            x: parent.width * s.start;
+                            y: 0px;
+                            width: parent.width * (s.done - s.start);
+                            height: parent.height;
+                            background: s.busy ? Theme.accent : Theme.accent.transparentize(0.35);
+                        }
+                        for s in root.segs: Rectangle {
+                            x: parent.width * s.start;
+                            y: 0;
+                            width: 1px;
+                            height: parent.height;
+                            background: Theme.panel;
+                        }
+                    }
+                    if root.segs.length > 0: ListFrame {
+                        height: min(168px, 26px + root.segs.length * 22px + 2px);
+                        VerticalLayout {
+                            padding: 1px;
+                            Rectangle {
+                                height: 24px;
+                                HorizontalLayout {
+                                    HeaderCell { text: @tr("N."); width: 40px; }
+                                    HeaderCell { text: @tr("Downloaded"); width: 110px; }
+                                    HeaderCell { text: @tr("Info"); horizontal-stretch: 1; }
+                                }
+                                Rectangle { y: parent.height - 1px; height: 1px; background: Theme.grid; }
+                            }
+                            ListView {
+                                vertical-stretch: 1;
+                                for s in root.segs: Rectangle {
+                                    height: 22px;
+                                    HorizontalLayout {
+                                        padding-left: 8px;
+                                        Cell { text: s.number; width: 32px; color: Theme.muted; font-size: Theme.footnote-size; }
+                                        Cell { text: s.downloaded; width: 110px; font-size: Theme.footnote-size; }
+                                        Cell { text: s.info; horizontal-stretch: 1; font-size: Theme.footnote-size; color: s.busy ? Theme.accent-text : Theme.muted; }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if root.tab == 1: VerticalLayout {
+                    spacing: 10px;
+                    alignment: start;
+                    CheckBox {
+                        text: @tr("Use speed limiter for this download");
+                        checked <=> root.limit-on;
+                        toggled => {
+                            root.limit-changed();
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: @tr("Maximum download speed (KB/s)");
+                            color: root.limit-on ? Theme.text : Theme.muted;
+                            vertical-alignment: center;
+                        }
+                        SpinBox {
+                            width: 120px;
+                            enabled: root.limit-on;
+                            minimum: 1;
+                            maximum: 1000000;
+                            step-size: 50;
+                            value <=> root.limit-kb;
+                            edited(v) => {
+                                root.limit-changed();
+                            }
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        for kb in [256, 512, 1024, 2048, 5120]: Button {
+                            text: kb >= 1024 ? @tr("{} MB/s", kb / 1024) : @tr("{} KB/s", kb);
+                            clicked => {
+                                root.limit-on = true;
+                                root.limit-kb = kb;
+                                root.limit-changed();
+                            }
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                    }
+                    Text {
+                        text: @tr("Changes apply right away, even while downloading.");
+                        font-size: Theme.footnote-size;
+                        color: Theme.muted;
+                        wrap: word-wrap;
+                    }
+                }
+                if root.tab == 2: VerticalLayout {
+                    spacing: 10px;
+                    alignment: start;
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: @tr("When this download completes:");
+                            color: Theme.text;
+                            vertical-alignment: center;
+                        }
+                        ComboBox {
+                            horizontal-stretch: 1;
+                            model: [@tr("Do nothing (keep the computer on)"), @tr("Shut down the computer"), @tr("Sleep"), @tr("Exit Mac Downloader"), @tr("Hibernate")];
+                            current-index <=> root.when-done;
+                            selected(v) => {
+                                root.completion-changed();
+                            }
+                        }
+                    }
+                    CheckBox {
+                        text: @tr("Force programs to close when shutting down");
+                        checked <=> root.force-close;
+                        enabled: root.when-done == 1;
+                        toggled => {
+                            root.completion-changed();
+                        }
+                    }
+                    CheckBox {
+                        text: @tr("Show the \"Download complete\" window");
+                        checked <=> root.complete-dialog;
+                        toggled => {
+                            root.completion-changed();
+                        }
+                    }
+                    Text {
+                        text: @tr("You get 30 seconds to cancel before the computer shuts down, sleeps or hibernates.");
+                        font-size: Theme.footnote-size;
+                        color: Theme.muted;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+          }
+        }
+        HorizontalLayout {
+            vertical-stretch: 0;
+            spacing: 8px;
+            Disclosure {
+                text: @tr("Details");
+                expanded <=> root.show-details;
+                toggled(open) => { root.details-toggled(open); }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Button {
+                text: @tr("Hide");
+                clicked => { root.close-window(); }
+            }
+            if root.state == 0 || root.state == 1: Button {
+                text: @tr("Pause"); primary: true;
+                clicked => { root.pause(); }
+            }
+            if root.state == 2 || root.state == 4: Button {
+                text: root.state == 4 ? @tr("Try Again") : @tr("Resume"); primary: true;
+                clicked => { root.resume(); }
+            }
+        }
+      }
+    }
+    }
+    // the hint of the tray button
+    if root.tray-tip: Rectangle {
+        x: max(4px, root.width - 89px - tip-text.preferred-width - 16px);
+        y: 32px;
+        width: tip-text.preferred-width + 16px;
+        height: tip-text.preferred-height + 10px;
+        background: Theme.popover;
+        border-width: 1px;
+        border-color: Theme.grid;
+        border-radius: 5px;
+        drop-shadow-blur: 6px;
+        drop-shadow-color: #00000044;
+        tip-text := Text {
+            text: @tr("Hide next to the clock");
+            color: Theme.text;
+            font-size: Theme.footnote-size;
+        }
+    }
+    // a corner to make the window bigger
+    Rectangle {
+        visible: !root.native-frame;
+        x: root.width - 14px;
+        y: root.height - 14px;
+        width: 14px;
+        height: 14px;
+        TouchArea {
+            mouse-cursor: nwse-resize;
+            pointer-event(ev) => {
+                if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                    root.start-resize();
+                }
+            }
+        }
+        Path {
+            viewbox-width: 10;
+            viewbox-height: 10;
+            stroke: Theme.muted;
+            stroke-width: 1px;
+            commands: "M 9 3 L 3 9 M 9 6 L 6 9";
+        }
+    }
+}
+
+export component CompleteDialog inherits ThemedWindow {
+    header-names-window: true;
+    // set for a moment so the window comes in front of the browser
+    in property <bool> front;
+    always-on-top: root.front;
+    title: @tr("Download complete");
+    preferred-width: 480px;
+    min-width: 400px;
+
+    in property <string> name;
+    in property <string> size;
+    in property <string> path;
+    in property <string> url;
+    in property <string> kind: "general";
+    in property <string> ext;
+    in-out property <bool> dont-show;
+
+    callback open-file();
+    callback open-with();
+    callback open-folder();
+    callback close-window();
+
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) { root.close-window(); return accept; }
+            reject
+        }
+    VerticalLayout {
+        padding: 20px;
+        spacing: 16px;
+        HorizontalLayout {
+            spacing: 14px;
+            Rectangle {
+                width: 44px;
+                KindTile { kind: root.kind; y: 0px; width: 44px; height: 44px; }
+                Rectangle {
+                    x: 30px; y: 30px; width: 18px; height: 18px; border-radius: 9px;
+                    background: Theme.ok;
+                    border-width: 2px;
+                    border-color: Theme.window;
+                    Glyph { x: 4px; y: 4px; width: 10px; height: 10px; kind: "check"; tint: Theme.on-accent; }
+                }
+            }
+            VerticalLayout {
+                spacing: 3px;
+                horizontal-stretch: 1;
+                alignment: center;
+                Text {
+                    text: @tr("Download complete");
+                    font-size: Theme.title3-size;
+                    font-weight: 600;
+                    color: Theme.text;
+                }
+                Text {
+                    text: root.name;
+                    font-size: Theme.body-size;
+                    color: Theme.text;
+                    overflow: elide;
+                }
+                Text {
+                    text: root.size + (root.ext != "" ? "  ·  " + root.ext : "");
+                    font-size: Theme.footnote-size;
+                    color: Theme.muted;
+                }
+            }
+        }
+        GridLayout {
+            spacing-horizontal: 10px;
+            spacing-vertical: 6px;
+            Row {
+                Text { text: @tr("Saved as"); font-size: Theme.footnote-size; color: Theme.muted; horizontal-alignment: right; }
+                Text { text: root.path; wrap: word-wrap; font-size: Theme.footnote-size; color: Theme.text; horizontal-stretch: 1; }
+            }
+            Row {
+                Text { text: @tr("Address"); font-size: Theme.footnote-size; color: Theme.muted; horizontal-alignment: right; }
+                Text { text: root.url; overflow: elide; font-size: Theme.footnote-size; color: Theme.muted; horizontal-stretch: 1; }
+            }
+        }
+        HorizontalLayout {
+            spacing: 8px;
+            CheckBox {
+                text: @tr("Don't show this again");
+                checked <=> root.dont-show;
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+        HorizontalLayout {
+            spacing: 8px;
+            Button {
+                text: @tr("Close");
+                clicked => {
+                    root.close-window();
+                }
+            }
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+            // no "Open with…" here: picked by mistake it changes which
+            // program opens this kind of file (still in the list's menu)
+            Button {
+                text: Theme.native-macos ? @tr("Show in Finder") : @tr("Open folder");
+                clicked => {
+                    root.open-folder();
+                }
+            }
+            Button {
+                text: @tr("Open");
+                primary: true;
+                clicked => {
+                    root.open-file();
+                }
+            }
+        }
+    }
+    }
+}

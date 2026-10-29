@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pacific Coast — Mac Downloader Widget Preview</title>
+<style>
+  :root { color-scheme: light; --page: #f5f5f7; --surface: #fff; --text: #1d1d1f; --muted: #626267; --line: #d2d2d7; --link: #0063cc; }
+  :root.dark { color-scheme: dark; --page: #1c1c1e; --surface: #2c2c2e; --text: #f5f5f7; --muted: #a1a1a6; --line: #48484a; --link: #64b0ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: var(--page); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  main { max-width: 940px; margin: 0 auto; }
+  h1 { font-size: 24px; line-height: 1.2; letter-spacing: -.02em; margin: 0 0 6px; }
+  p { color: var(--muted); margin: 0 0 16px; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 112px; }
+  a { padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--link); text-decoration: none; background: var(--surface); }
+  .player { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #173c4b; }
+  video { display: block; width: 100%; height: min(54vw, 430px); min-height: 260px; background: linear-gradient(164deg, #607e92 0%, #6f98a5 40%, #254c54 41%, #133f4d 65%, #1c5c65 66%, #57817b 100%); }
+  .caption { position: absolute; left: 24px; bottom: 24px; color: #fff; pointer-events: none; text-shadow: 0 1px 5px #173c4b; }
+  .caption strong { display: block; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+  .caption span { font-size: 13px; }
+  .footnote { margin-top: 16px; font-size: 12px; }
+  @media (max-width: 600px) { body { padding: 20px 12px; } h1 { font-size: 21px; } .caption { left: 18px; bottom: 18px; } }
+</style>
+<main>
+  <h1>Video download widget</h1>
+  <p>Production content script with local sample formats. Download actions are mocked.</p>
+  <nav aria-label="Preview states">
+    <a href="?theme=light">Light</a><a href="?theme=dark">Dark</a>
+    <a href="?theme=light&state=many">Many formats</a>
+    <a href="?theme=dark&state=many">Many · Dark</a>
+    <a href="?theme=light&state=loading">Loading</a>
+    <a href="?theme=light&state=working">Resolving</a>
+    <a href="?theme=light&state=error">Error</a>
+    <a href="?theme=dark&state=offline">App not running · Dark</a>
+    <a href="?theme=light&state=protected">Protected video</a>
+    <a href="?theme=dark&state=protected">Protected · Dark</a>
+    <a href="?theme=light&state=switch">Video switch</a>
+    <a href="?theme=light&scale=0.5">50% size</a>
+    <a href="?theme=dark&scale=2">200% size</a>
+  </nav>
+  <div class="player">
+    <video muted playsinline tabindex="0" aria-label="Sample video area"></video>
+    <div class="caption"><strong>Pacific Coast</strong><span>Sample video · 2:35</span></div>
+  </div>
+  <p class="footnote">Use Tab, arrow keys, Home, End, and Escape in the widget. Drag the Download button to reposition it.</p>
+</main>
+<script>
+  // Development-only fixture: no extension installation, media, app API or network.
+  // ?state=many|loading|working|error|offline|protected|switch  &theme=light|dark  &scale=0.5..2
+  const params = new URLSearchParams(location.search);
+  const dark = params.get('theme') === 'dark';
+  const state = params.get('state') || '';
+  document.documentElement.classList.toggle('dark', dark);
+  // Mirrors the :host tokens in content.js so either appearance can be forced.
+  const palette = dark
+    ? { surface: '#2c2c2e', group: '#3a3a3c', text: '#f5f5f7', secondary: '#a1a1a6', line: 'rgb(255 255 255 / 14%)', separator: 'rgb(255 255 255 / 10%)',
+        accent: '#0a84ff', link: '#64b0ff', fill: '#006bd6', hover: 'rgb(255 255 255 / 7%)', selected: 'rgb(10 132 255 / 22%)',
+        success: '#30d158', warning: '#ffb35c', error: '#ff6961', video: '#b24042', audio: '#a43e72', neutral: '#6e6e73', shadow: 'rgb(0 0 0 / 45%)' }
+    : { surface: '#fff', group: '#f5f5f7', text: '#1d1d1f', secondary: '#626267', line: 'rgb(0 0 0 / 12%)', separator: 'rgb(0 0 0 / 9%)',
+        accent: '#007aff', link: '#0063cc', fill: '#0063cc', hover: 'rgb(0 0 0 / 5%)', selected: 'rgb(0 122 255 / 10%)',
+        success: '#1b7a32', warning: '#9b4a00', error: '#c92a20', video: '#b24042', audio: '#a43e72', neutral: '#6e6e73', shadow: 'rgb(0 0 0 / 16%)' };
+  // Expose the fixture's shadow root for UI inspection; production stays closed.
+  const nativeShadow = Element.prototype.attachShadow;
+  Element.prototype.attachShadow = function(options) {
+    const root = nativeShadow.call(this, { ...options, mode: 'open' });
+    for (const [key, value] of Object.entries(palette)) this.style.setProperty('--ez-' + key, value);
+    window.widgetPreviewRoot = root;
+    return root;
+  };
+  const LONG = 'The Pacific Coast Highway, Mile by Mile: Lighthouses, Tide Pools, and the People Who Keep Them Running Through Every Season (Extended Director’s Cut)';
+  const yt = (o, title = 'Pacific Coast — A Moment by the Ocean') => ({ duration: 155, title, ...o });
+  const basic = [
+    { label: '1080p Full HD · MP4', ext: 'mp4', yt: yt({ quality: '1080p', key: '1080p|MP4', ext: 'mp4', tag: 'Full HD', codec: 'H.264', size: 46800000, audioUrl: 'https://media.invalid/a' }) },
+    { label: '720p HD · MP4', ext: 'mp4', yt: yt({ quality: '720p', key: '720p|MP4+A', ext: 'mp4', tag: 'HD', size: 24500000 }) },
+    { label: 'Audio · M4A', ext: 'm4a', yt: yt({ quality: 'audio', key: 'audio|M4A', ext: 'm4a', size: 2480000, kbps: 128 }) },
+  ];
+  const many = [
+    { label: '2160p60 4K · MP4 AV1', yt: yt({ quality: '2160p60', key: '2160p60|MP4', ext: 'mp4', tag: '4K', codec: 'AV1', size: 2040109465, kbps: 5968, audioUrl: 'https://media.invalid/a' }, LONG) },
+    { label: '2160p 4K · WEBM', yt: yt({ quality: '2160p', key: '2160p|WEBM', ext: 'webm', tag: '4K', codec: 'VP9', size: 1288490188, audioUrl: 'https://media.invalid/a' }, LONG) },
+    { label: '1440p 2K · MKV', sub: 'size unknown', yt: yt({ quality: '1440p', key: '1440p|MP4', ext: 'mkv', tag: '2K', codec: 'VP9', size: 0, audioUrl: 'https://media.invalid/a' }, LONG) },
+    { label: '1080p60 Full HD · MP4', yt: yt({ quality: '1080p60', key: '1080p60|MP4', ext: 'mp4', tag: 'Full HD', codec: 'H.264', size: 432650000, audioUrl: 'https://media.invalid/a' }, LONG) },
+    { label: '1080p Full HD · MP4 (video only)', sub: 'size unknown', yt: yt({ quality: '1080p', key: '1080p|MP4-video', ext: 'mp4', tag: 'Full HD', codec: 'H.264', size: 0, hasAudio: false }, LONG) },
+    { label: '720p HD · MP4', yt: yt({ quality: '720p', key: '720p|MP4+A', ext: 'mp4', tag: 'HD', codec: 'H.264', size: 207800000 }, LONG) },
+    { label: '480p SD · WEBM', yt: yt({ quality: '480p', key: '480p|WEBM', ext: 'webm', tag: 'SD', codec: 'VP9', size: 101100000, audioUrl: 'https://media.invalid/a' }, LONG) },
+    { label: '4320p 8K · MP4', sub: 'Not offered for this video', disabled: true },
+    { label: 'HLS stream', sub: 'https://stream.media-cdn.example/hls/master.m3u8', url: 'https://stream.media-cdn.example/hls/master.m3u8', ext: 'ts' },
+    { label: 'video/mp4 · 24.5 MB', sub: 'https://cdn.example.com/clips/coast.mp4', url: 'https://cdn.example.com/clips/coast.mp4', ext: 'mp4' },
+    { label: 'Pacific-Coast-Highway-Extended-Directors-Cut-Remastered-Master-Export-Final-v2.mp4', url: 'https://files.example.org/x.mp4', ext: 'mp4' },
+    { label: 'Audio only · M4A 129k', yt: yt({ quality: 'audio', key: 'audio|M4A', ext: 'm4a', kbps: 129, size: 44350000 }, LONG) },
+    { label: 'Audio only · WEBM 160k', sub: 'size unknown', yt: yt({ quality: 'audio', key: 'audio|WEBM', ext: 'webm', kbps: 160, size: 0 }, LONG) },
+    { label: 'Audio · MP3 192k', yt: yt({ quality: 'mp3', key: 'audio|MP3', ext: 'mp3', kbps: 192, size: 65640000 }, LONG) },
+  ];
+  const formats = state === 'protected' ? [{ disabled: true, protected: true, label: 'Protected video', type: 'protected', url: null }]
+    : state === 'many' ? many
+    : state === 'working' ? [{ label: 'Getting video qualities…', sub: 'This takes a few seconds', disabled: true }]
+    : ['loading', 'error', 'offline'].includes(state) ? []
+    : basic;
+  const listeners = [];
+  window.chrome = {
+    storage: { local: { get(defaults, callback) { callback({ ...defaults, bubbleScale: Number(params.get('scale')) || 1 }); } }, onChanged: { addListener() {} } },
+    runtime: { id: 'widget-preview', lastError: null, onMessage: { addListener(fn) { listeners.push(fn); } }, sendMessage(message, callback) {
+      if (message.type === 'swiftget-resolve-video') {
+        if (state === 'loading') return Promise.resolve();
+        const second = /[?&]v=second/.test(location.search);
+        const answer = state === 'error' ? { error: 'Can’t get this video. The site may require signing in first.' }
+          : state === 'offline' ? { error: 'Mac Downloader is not running' }
+          : second ? { items: basic.slice(1).map((m) => ({ ...m, yt: { ...m.yt, title: 'Fog Over the Golden Gate' } })) } : { items: formats };
+        setTimeout(() => callback?.(answer), second ? 1800 : 400); return Promise.resolve(answer);
+      }
+      const response = message.type === 'swiftget-config' ? { enabled: true, skipSites: [] }
+        : message.type === 'swiftget-media-request' ? formats
+        : message.type === 'swiftget-query-top-fullscreen' ? { fullscreen: false }
+        : { ok: state !== 'offline' };
+      callback?.(response); return Promise.resolve(response);
+    } },
+  };
+  addEventListener('load', () => {
+    listeners.forEach(fn => fn({ type: 'swiftget-open-panel' }, {}, () => {}));
+    if (state !== 'switch') return;
+    // Same-tab switch: the URL changes while the document title still names
+    // the previous video; the picker must not show that title or its formats.
+    setTimeout(() => {
+      history.pushState(null, '', '?theme=' + (dark ? 'dark' : 'light') + '&state=switch&v=second');
+      dispatchEvent(new PopStateEvent('popstate'));
+      listeners.forEach(fn => fn({ type: 'swiftget-open-panel' }, {}, () => {}));
+    }, 2500);
+  });
+</script>
+<script src="../content.js"></script>
+</html>

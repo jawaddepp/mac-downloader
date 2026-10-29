@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mac Downloader Settings</title>
+  <link rel="stylesheet" href="apple-ui.css">
+</head>
+<body class="options-page">
+  <main class="settings-shell">
+    <header class="settings-header"><img class="app-icon" src="icons/icon128.png" alt="" width="40" height="40"><div><h1>Mac Downloader</h1><p>Browser Extension Settings</p></div></header>
+    <section class="settings-section" aria-labelledby="downloads-heading"><h2 id="downloads-heading">Downloads</h2><div class="group">
+      <div class="setting-row"><div class="setting-copy"><label for="intercept">Send Downloads to Mac Downloader</label><small>Files you download in this browser open in the app.</small></div><span class="switch-control"><input type="checkbox" id="intercept" role="switch" aria-label="Send Downloads to Mac Downloader"><span class="switch-track" aria-hidden="true"></span></span></div>
+      <div class="setting-row"><div class="setting-copy"><label for="minSize">Minimum File Size</label><small>Smaller files stay in the browser. Use 0 for all files.</small></div><div class="number-control"><input type="number" id="minSize" min="0" step="any" aria-describedby="minimum-error"><span class="unit" aria-hidden="true">KB</span></div></div>
+    </div><p class="field-error" id="minimum-error" hidden>Enter a file size of 0 KB or more.</p></section>
+    <section class="settings-section" aria-labelledby="video-heading"><h2 id="video-heading">Video Button</h2><div class="group"><div class="setting-row range-setting">
+      <div class="range-heading"><div class="setting-copy"><label for="bubbleScale">Button Size</label><small>The download button shown above web videos.</small></div><output id="bubbleScaleText" for="bubbleScale">100%</output></div>
+      <div class="range-controls"><input type="range" id="bubbleScale" min="50" max="200" step="5" value="100" aria-label="Video button size"><button class="text-button" id="bubbleScaleReset" type="button">Reset</button></div>
+      <div class="scale-example" aria-hidden="true"><span class="preview-download" id="buttonPreview"><svg class="glyph" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></span></div>
+    </div></div><p class="section-note">Light and dark appearance follow your Mac.</p></section>
+    <details class="settings-section"><summary><svg class="glyph disclosure-chevron" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Connection</summary><div class="group"><div class="setting-row"><div class="setting-copy"><label for="port">App Port</label><small>Must match the browser port in Mac Downloader.</small></div><input type="number" id="port" min="1024" max="65535" step="1" aria-describedby="port-error"></div></div><p class="field-error" id="port-error" hidden>Enter a whole number from 1024 to 65535.</p><p class="section-note">The setup assistant normally sets this for you.</p></details>
+    <div class="saved" id="saved" role="status" aria-live="polite">Changes save automatically.</div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

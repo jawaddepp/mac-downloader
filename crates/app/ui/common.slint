@@ -1,0 +1,1405 @@
+// Mac Downloader – the shared design system: data types, semantic tokens,
+// symbols and the small components every window is built from.
+
+import { Palette } from "std-widgets.slint";
+
+export struct DownloadRow {
+    id: int,
+    name: string,
+    // file type icon: video, audio, archive, pdf, doc, sheet, slides, text, exe, apk, disc, image, torrent, general
+    kind: string,
+    category: string,
+    queue: string,
+    size: string,
+    status: string,
+    progress: float,
+    eta: string,
+    speed: string,
+    last-try: string,
+    description: string,
+    added: string,
+    // part of the multiple selection (Command / Shift click, Command-A)
+    sel: bool,
+    save-to: string,
+    referer: string,
+    parent: string,
+    // 0 queued, 1 running, 2 paused, 3 complete, 4 error
+    state: int,
+    // one readable line: "45 MB of 120 MB · 2.1 MB/s · 30s left", "Paused · 12 MB", an error…
+    detail: string,
+    // the progress is measurable (known size or part count)
+    known: bool,
+    // "42%" when known and unfinished, otherwise ""
+    percent: string,
+}
+
+// a column of the download list, in the order shown (drag to move / resize)
+export struct ColDef {
+    key: string,
+    width: length,
+}
+
+// which list columns are visible (View > Columns)
+export struct Cols {
+    q: bool,
+    size: bool,
+    status: bool,
+    eta: bool,
+    speed: bool,
+    last: bool,
+    desc: bool,
+    added: bool,
+    saveto: bool,
+    referer: bool,
+    parent: bool,
+}
+
+// a category in the sidebar
+export struct CatRow {
+    name: string,
+    // the name in the current language
+    label: string,
+    // icon kind
+    kind: string,
+    count: string,
+    unfinished: string,
+    finished: string,
+    builtin: bool,
+}
+
+// one row of a simple two/three column list (logins, server exceptions...)
+export struct PairRow {
+    a: string,
+    b: string,
+    c: string,
+}
+
+// a file found by the site grabber / "download all links"
+export struct LinkRow {
+    checked: bool,
+    name: string,
+    kind: string,
+    ext: string,
+    text: string,
+    url: string,
+}
+
+export struct QueueRow {
+    id: int,
+    name: string,
+    count: int,
+    running: bool,
+}
+
+// one connection of a download (progress window)
+export struct SegView {
+    // this connection is receiving right now
+    busy: bool,
+    start: float,
+    done: float,
+    number: string,
+    downloaded: string,
+    info: string,
+}
+
+// ------------------------------------------------------------------ tokens
+// Rust supplies resolved AppKit semantic colors on macOS (and an equivalent
+// accessible palette elsewhere). Everything below derives from them, so
+// light, dark, accent and contrast changes flow through every window.
+
+export global Theme {
+    // Appearance choice: 0 System, 1 Light, 2 Dark. Mode is resolved 0/1.
+    in-out property <int> appearance: 0;
+    in-out property <int> mode: 0;
+    in-out property <bool> native-macos: false;
+    out property <bool> dark: mode == 1;
+    in-out property <float> font-scale: 1.0;
+    in-out property <string> font-family: "";
+    in-out property <float> glass: 0;
+    // System accessibility preferences (macOS).
+    in-out property <bool> reduce-motion: false;
+    in-out property <bool> high-contrast: false;
+    in-out property <color> platform-window: dark ? #2b2b2d : #ececee;
+    in-out property <color> platform-panel: dark ? #1e1e1e : #ffffff;
+    in-out property <color> platform-secondary-surface: dark ? #29292a : #f9f9fa;
+    in-out property <color> platform-sidebar: dark ? #2b2b2d : #ececee;
+    in-out property <color> platform-text: dark ? #f5f5f7 : #1d1d1f;
+    in-out property <color> platform-muted: dark ? #a1a1a6 : #5f5f64;
+    in-out property <color> platform-accent: dark ? #0a84ff : #007aff;
+    in-out property <color> platform-accent-text: dark ? #4ca2ff : #0064d2;
+    in-out property <color> platform-line: dark ? #3d3d3f : #d8d8dc;
+    in-out property <color> platform-selection: dark ? #1f3a5a : #dcebff;
+    in-out property <color> platform-hover: dark ? #2a2a2b : #f2f2f3;
+    in-out property <color> platform-ok: dark ? #30d158 : #1f7a35;
+    in-out property <color> platform-warn: dark ? #ff9f0a : #a84a00;
+    in-out property <color> platform-err: dark ? #ff6961 : #c8102e;
+    in-out property <color> platform-input: dark ? #1e1e1e : #ffffff;
+    in-out property <color> platform-bar: dark ? #3a3a3c : #e3e3e6;
+
+    // Surfaces. "window" is the chrome (sidebar, toolbar, dialogs); "panel"
+    // is readable content (the list, grouped settings).
+    out property <color> window: platform-window;
+    out property <color> panel: platform-panel.transparentize(glass);
+    out property <color> secondary-surface: platform-secondary-surface.transparentize(glass);
+    out property <color> sidebar: platform-sidebar.transparentize(glass);
+    out property <color> popover: dark ? platform-panel.brighter(0.38) : platform-panel;
+    out property <color> toolbar-top: platform-window.transparentize(glass);
+    out property <color> toolbar-bottom: toolbar-top;
+    out property <color> toolbar-text: platform-text;
+    out property <color> header-top: platform-secondary-surface.transparentize(glass);
+    out property <color> header-bottom: header-top;
+    // Content.
+    out property <color> text: platform-text;
+    out property <color> muted: platform-muted;
+    out property <color> accent: platform-accent;
+    out property <color> accent-text: platform-accent-text;
+    out property <color> on-accent: #ffffff;
+    // Lines. "line" is a full separator, "grid" a quiet one inside groups.
+    out property <color> line: high-contrast ? platform-muted : platform-line;
+    out property <color> grid: high-contrast ? platform-line : platform-line.transparentize(0.45);
+    out property <color> select: platform-selection;
+    out property <color> select-line: platform-accent.transparentize(0.7);
+    // Translucent interaction fills read correctly on any surface.
+    out property <color> hover: platform-text.transparentize(dark ? 0.9 : 0.94);
+    out property <color> pressed: platform-text.transparentize(dark ? 0.82 : 0.88);
+    out property <color> fill: platform-text.transparentize(dark ? 0.9 : 0.95);
+    // grouped settings and inspector sections on the window background
+    out property <color> group: dark ? platform-text.transparentize(0.94) : platform-text.transparentize(0.975);
+    out property <color> focus-ring: platform-accent.transparentize(0.25);
+    // Status.
+    out property <color> ok: platform-ok;
+    out property <color> warn: platform-warn;
+    out property <color> err: platform-err;
+    out property <color> bar-bg: platform-bar;
+    out property <color> input-bg: platform-input;
+
+    // Type scale (follows Settings > Appearance > Text size).
+    out property <length> caption-size: 11px * font-scale;
+    out property <length> footnote-size: 12px * font-scale;
+    out property <length> body-size: 13px * font-scale;
+    out property <length> title3-size: 15px * font-scale;
+    out property <length> title2-size: 17px * font-scale;
+    out property <length> title1-size: 22px * font-scale;
+    // Motion: nothing moves when Reduce Motion is on.
+    out property <duration> quick: reduce-motion ? 0ms : 140ms;
+
+    // Restrained category tints; white symbols stay ≥ 3:1 on each.
+    public pure function tint(kind: string) -> color {
+        if (kind == "video") { return #c03a44; }
+        if (kind == "audio" || kind == "music") { return #b13a69; }
+        if (kind == "archive") { return #a35a14; }
+        if (kind == "image") { return #11786c; }
+        if (kind == "exe" || kind == "apk" || kind == "program") { return #6d53b5; }
+        if (kind == "torrent") { return #2c8343; }
+        if (kind == "disc") { return #5d6b7b; }
+        if (kind == "pdf" || kind == "doc" || kind == "text" || kind == "sheet" || kind == "slides" || kind == "folder") { return #2f6bd0; }
+        return #73737a;
+    }
+}
+
+// What the platform layer needs to know about each window (every window
+// has its own copy of a global).
+export global WindowInfo {
+    in-out property <string> title;
+    in-out property <bool> header-names-window;
+}
+
+// Applies the light/dark look to the standard widgets of every window.
+export component ThemedWindow inherits Window {
+    property <bool> dark: Theme.dark;
+    changed dark => {
+        Palette.color-scheme = self.dark ? ColorScheme.dark : ColorScheme.light;
+    }
+    init => {
+        Palette.color-scheme = self.dark ? ColorScheme.dark : ColorScheme.light;
+        WindowInfo.title = self.title;
+        WindowInfo.header-names-window = self.header-names-window;
+    }
+    // The title stays set for VoiceOver, the Window menu and Mission Control;
+    // windows whose own header already names them hide it from the title bar.
+    in property <bool> header-names-window: false;
+    changed title => { WindowInfo.title = self.title; }
+    background: Theme.window;
+    default-font-size: 13px * Theme.font-scale;
+    default-font-family: Theme.font-family;
+    icon: @image-url("icon-window.png");
+}
+
+// ------------------------------------------------------------------ symbols
+// One vector symbol language (no font dependency), drawn on a 16-unit grid
+// with 1.5-unit round strokes to sit with 13 pt text like SF Symbols.
+export component Glyph inherits Rectangle {
+    in property <string> kind;
+    in property <color> tint: Theme.text;
+    width: 16px;
+    height: 16px;
+    property <bool> solid: root.kind == "play" || root.kind == "pause" || root.kind == "stop" || root.kind == "more";
+    property <string> path: root.kind == "play" ? "M 5.1 2.9 Q 4.4 2.5 4.4 3.4 L 4.4 12.6 Q 4.4 13.5 5.1 13.1 L 12.5 8.7 Q 13.3 8 12.5 7.3 Z"
+        : root.kind == "progress" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 4.5 L 8 8 L 11 9.5"
+        : root.kind == "openwith" ? "M 2.5 5 L 2.5 13.5 L 11 13.5 L 11 10 M 7 9 L 13.5 2.5 M 9 2.5 L 13.5 2.5 L 13.5 7"
+        : root.kind == "folder" ? "M 2 5.5 L 2 4 Q 2 3 3 3 L 6 3 L 7.7 4.8 L 13 4.8 Q 14 4.8 14 5.8 L 14 12 Q 14 13 13 13 L 3 13 Q 2 13 2 12 Z M 2.3 6.4 L 13.7 6.4"
+        : root.kind == "reveal" ? "M 7 2 A 5 5 0 1 1 6.99 2 Z M 10.6 10.6 L 14.5 14.5"
+        : root.kind == "pause" ? "M 4.2 3 Q 3.5 3 3.5 3.7 L 3.5 12.3 Q 3.5 13 4.2 13 L 5.8 13 Q 6.5 13 6.5 12.3 L 6.5 3.7 Q 6.5 3 5.8 3 Z M 10.2 3 Q 9.5 3 9.5 3.7 L 9.5 12.3 Q 9.5 13 10.2 13 L 11.8 13 Q 12.5 13 12.5 12.3 L 12.5 3.7 Q 12.5 3 11.8 3 Z"
+        : root.kind == "stop" ? "M 4 3 Q 3 3 3 4 L 3 12 Q 3 13 4 13 L 12 13 Q 13 13 13 12 L 13 4 Q 13 3 12 3 Z"
+        : root.kind == "redo" ? "M 13.5 8 A 5.5 5.5 0 1 1 11 3.5 M 9.5 1.5 L 12 4 L 8.5 5"
+        : root.kind == "refresh" ? "M 2.5 7 A 5.5 5.5 0 0 1 12.8 5 M 13.5 9 A 5.5 5.5 0 0 1 3.2 11 M 13 2 L 13 5.2 L 9.8 5.2 M 3 14 L 3 10.8 L 6.2 10.8"
+        : root.kind == "edit" ? "M 2.5 13.5 L 3.2 10.5 L 11 2.7 L 13.3 5 L 5.5 12.8 Z M 9.4 4.2 L 11.8 6.6"
+        : root.kind == "check" ? "M 3 8.4 L 6.4 11.6 L 13 4.6"
+        : root.kind == "copy" ? "M 6.5 5.5 L 12.5 5.5 Q 13.5 5.5 13.5 6.5 L 13.5 12.5 Q 13.5 13.5 12.5 13.5 L 6.5 13.5 Q 5.5 13.5 5.5 12.5 L 5.5 6.5 Q 5.5 5.5 6.5 5.5 Z M 2.5 10 L 2.5 3.5 Q 2.5 2.5 3.5 2.5 L 10 2.5"
+        : root.kind == "hash" ? "M 6 2 L 4.5 14 M 11.5 2 L 10 14 M 2.5 5.5 L 14 5.5 M 2 10.5 L 13.5 10.5"
+        : root.kind == "info" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 7.2 L 8 11.5 M 8 4.6 L 8 4.9"
+        : root.kind == "close" ? "M 4 4 L 12 12 M 12 4 L 4 12"
+        : root.kind == "trash" || root.kind == "delete" ? "M 2.8 4 L 13.2 4 M 6 4 L 6 2.5 L 10 2.5 L 10 4 M 4 4 L 4.5 12.5 Q 4.6 13.5 5.5 13.5 L 10.5 13.5 Q 11.4 13.5 11.5 12.5 L 12 4 M 6.5 6.8 L 6.5 10.8 M 9.5 6.8 L 9.5 10.8"
+        : root.kind == "clock" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 4.4 L 8 8 L 10.6 9.4"
+        : root.kind == "plus" ? "M 8 3 L 8 13 M 3 8 L 13 8"
+        : root.kind == "minus" ? "M 3 8 L 13 8"
+        : root.kind == "warn" ? "M 8 2.2 L 14.3 13.3 L 1.7 13.3 Z M 8 6.3 L 8 9.4 M 8 11.2 L 8 11.5"
+        : root.kind == "down" ? "M 8 2.2 L 8 10.1 M 4.8 7 L 8 10.2 L 11.2 7 M 2.5 10.5 L 2.5 12.5 Q 2.5 13.5 3.5 13.5 L 12.5 13.5 Q 13.5 13.5 13.5 12.5 L 13.5 10.5"
+        : root.kind == "up" ? "M 8 14 L 8 4 M 4.5 7.5 L 8 4 L 11.5 7.5"
+        : root.kind == "caret-down" ? "M 4.5 6.2 L 8 9.7 L 11.5 6.2"
+        : root.kind == "caret-up" ? "M 4.5 9.8 L 8 6.3 L 11.5 9.8"
+        : root.kind == "caret-right" ? "M 6.2 4.5 L 9.7 8 L 6.2 11.5"
+        : root.kind == "caret-left" ? "M 9.8 4.5 L 6.3 8 L 9.8 11.5"
+        : root.kind == "bulb" ? "M 5.5 12 L 5 10 A 4.7 4.7 0 1 1 11 10 L 10.5 12 Z M 6 14 L 10 14"
+        : root.kind == "queue" ? "M 2.5 3.5 L 13.5 3.5 M 2.5 7.5 L 13.5 7.5 M 2.5 11.5 L 7 11.5 M 10.5 10 L 13.5 12 L 10.5 14 Z"
+        : root.kind == "search" ? "M 6.8 2.3 A 4.5 4.5 0 1 1 6.79 2.3 Z M 10.1 10.1 L 13.6 13.6"
+        : root.kind == "more" ? "M 3.5 6.8 A 1.2 1.2 0 1 1 3.49 6.8 Z M 8 6.8 A 1.2 1.2 0 1 1 7.99 6.8 Z M 12.5 6.8 A 1.2 1.2 0 1 1 12.49 6.8 Z"
+        : root.kind == "settings" ? "M 2.5 4 L 4 4 M 7 4 L 13.5 4 M 5.5 2.5 L 5.5 5.5 M 2.5 8 L 9 8 M 12 8 L 13.5 8 M 10.5 6.5 L 10.5 9.5 M 2.5 12 L 4 12 M 7 12 L 13.5 12 M 5.5 10.5 L 5.5 13.5"
+        : root.kind == "sidebar" ? "M 3 2.5 L 13 2.5 Q 14 2.5 14 3.5 L 14 12.5 Q 14 13.5 13 13.5 L 3 13.5 Q 2 13.5 2 12.5 L 2 3.5 Q 2 2.5 3 2.5 Z M 6 2.5 L 6 13.5"
+        : root.kind == "archive" ? "M 2.5 3 L 13.5 3 L 13.5 6 L 2.5 6 Z M 3.3 6 L 3.3 13.5 L 12.7 13.5 L 12.7 6 M 6.3 8.8 L 9.7 8.8"
+        : root.kind == "video" ? "M 3 3 L 13 3 Q 14 3 14 4 L 14 12 Q 14 13 13 13 L 3 13 Q 2 13 2 12 L 2 4 Q 2 3 3 3 Z M 6.5 5.6 L 10 8 L 6.5 10.4 Z"
+        : root.kind == "music" ? "M 6 11.5 L 6 3.5 L 13 2 L 13 10 M 6 11.5 A 2 1.5 0 1 1 5.99 11.5 Z M 13 10 A 2 1.5 0 1 1 12.99 10 Z"
+        : root.kind == "image" ? "M 3 2.5 L 13 2.5 Q 14 2.5 14 3.5 L 14 12.5 Q 14 13.5 13 13.5 L 3 13.5 Q 2 13.5 2 12.5 L 2 3.5 Q 2 2.5 3 2.5 Z M 2.5 11.5 L 6 7.5 L 9 10.7 L 11.2 8.5 L 13.5 11 M 10.5 5.3 L 10.5 5.4"
+        : root.kind == "torrent" ? "M 3 2 L 3 8 A 5 5 0 0 0 13 8 L 13 2 M 6 2 L 6 8 A 2 2 0 0 0 10 8 L 10 2 M 3 5 L 6 5 M 10 5 L 13 5"
+        : root.kind == "globe" ? "M 8 1.5 A 6.5 6.5 0 1 1 7.99 1.5 Z M 1.5 8 L 14.5 8 M 8 1.5 C 4 5 4 11 8 14.5 M 8 1.5 C 12 5 12 11 8 14.5"
+        : root.kind == "program" ? "M 2.5 3 L 13.5 3 Q 14 3 14 3.5 L 14 12.5 Q 14 13 13.5 13 L 2.5 13 Q 2 13 2 12.5 L 2 3.5 Q 2 3 2.5 3 Z M 2 6 L 14 6 M 5 8.2 L 7 10 L 5 11.8 M 8.5 11.5 L 11.5 11.5"
+        : root.kind == "disc" ? "M 8 1.5 A 6.5 6.5 0 1 1 7.99 1.5 Z M 8 6 A 2 2 0 1 1 7.99 6 Z"
+        : root.kind == "table" ? "M 3 2.5 L 13 2.5 Q 14 2.5 14 3.5 L 14 12.5 Q 14 13.5 13 13.5 L 3 13.5 Q 2 13.5 2 12.5 L 2 3.5 Q 2 2.5 3 2.5 Z M 2 6 L 14 6 M 7 6 L 7 13.5 M 2 9.8 L 14 9.8"
+        : root.kind == "presentation" ? "M 2 2.5 L 14 2.5 M 3 2.5 L 3 10.5 L 13 10.5 L 13 2.5 M 8 10.5 L 8 13.5 M 5 14 L 8 12.5 L 11 14"
+        // Library: the tray of every download, the active and the finished ones
+        : root.kind == "tray" ? "M 2.5 9.5 L 4.4 3.6 Q 4.7 2.6 5.7 2.6 L 10.3 2.6 Q 11.3 2.6 11.6 3.6 L 13.5 9.5 L 13.5 12.4 Q 13.5 13.4 12.5 13.4 L 3.5 13.4 Q 2.5 13.4 2.5 12.4 Z M 2.5 9.5 L 5.6 9.5 Q 6 11.1 8 11.1 Q 10 11.1 10.4 9.5 L 13.5 9.5"
+        : root.kind == "arrow-circle" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 4.7 L 8 10.9 M 5.5 8.6 L 8 11.1 L 10.5 8.6"
+        : root.kind == "check-circle" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 5.2 8.3 L 7.2 10.2 L 10.9 6.1"
+        // Settings panes
+        : root.kind == "appearance" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 1.8 L 8 14.2"
+        : root.kind == "signal" ? "M 3 13 L 3 10.5 M 6.3 13 L 6.3 8 M 9.7 13 L 9.7 5.5 M 13 13 L 13 3"
+        : root.kind == "server" ? "M 3.5 2.5 L 12.5 2.5 Q 13.5 2.5 13.5 3.5 L 13.5 6 Q 13.5 7 12.5 7 L 3.5 7 Q 2.5 7 2.5 6 L 2.5 3.5 Q 2.5 2.5 3.5 2.5 Z M 3.5 9 L 12.5 9 Q 13.5 9 13.5 10 L 13.5 12.5 Q 13.5 13.5 12.5 13.5 L 3.5 13.5 Q 2.5 13.5 2.5 12.5 L 2.5 10 Q 2.5 9 3.5 9 Z M 5 4.7 L 5 4.8 M 5 11.2 L 5 11.3"
+        : root.kind == "lock" ? "M 4.5 7.5 L 11.5 7.5 Q 12.5 7.5 12.5 8.5 L 12.5 12.8 Q 12.5 13.8 11.5 13.8 L 4.5 13.8 Q 3.5 13.8 3.5 12.8 L 3.5 8.5 Q 3.5 7.5 4.5 7.5 Z M 5.5 7.5 L 5.5 5.2 A 2.5 2.5 0 0 1 10.5 5.2 L 10.5 7.5"
+        : root.kind == "speaker" ? "M 2.5 6.2 L 4.8 6.2 L 8.2 3.2 L 8.2 12.8 L 4.8 9.8 L 2.5 9.8 Z M 10.8 5.7 Q 12.2 8 10.8 10.3 M 12.8 3.9 Q 15.3 8 12.8 12.1"
+        : root.kind == "gauge" ? "M 2.6 11.6 A 5.6 5.6 0 1 1 13.4 11.6 M 8 9.4 L 10.9 6.3"
+        : root.kind == "link" ? "M 7 9 A 2.8 2.8 0 0 0 11 9 L 13 7 A 2.8 2.8 0 0 0 9 3 L 8 4 M 9 7 A 2.8 2.8 0 0 0 5 7 L 3 9 A 2.8 2.8 0 0 0 7 13 L 8 12"
+        : root.kind == "puzzle" ? "M 3 5 L 6 5 Q 6 3 7.5 3 Q 9 3 9 5 L 12 5 L 12 8 Q 14 8 14 9.5 Q 14 11 12 11 L 12 14 L 3 14 Z"
+        : "M 4.5 2 L 9.5 2 L 12.5 5 L 12.5 13 Q 12.5 14 11.5 14 L 4.5 14 Q 3.5 14 3.5 13 L 3.5 3 Q 3.5 2 4.5 2 Z M 9.5 2 L 9.5 5 L 12.5 5 M 6 8.2 L 10 8.2 M 6 11 L 10 11";
+    // the filled half of a two-tone symbol
+    property <string> fill-path: root.kind == "appearance" ? "M 8 1.8 A 6.2 6.2 0 0 0 8 14.2 Z" : "";
+    if root.fill-path != "": Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 16;
+        viewbox-height: 16;
+        fill: root.tint;
+        stroke-width: 0px;
+        commands: root.fill-path;
+    }
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 16;
+        viewbox-height: 16;
+        stroke-width: root.solid ? 0px : max(1.25px, 1.5px * self.width / 16px);
+        stroke-line-cap: round;
+        stroke-line-join: round;
+        stroke: root.tint;
+        fill: root.solid ? root.tint : transparent;
+        commands: root.path;
+    }
+}
+
+export component P inherits Path { viewbox-width: 32; viewbox-height: 32; }
+export component G inherits Path { viewbox-width: 16; viewbox-height: 16; }
+
+// The symbol of a file kind.
+export component TypeIcon inherits Rectangle {
+    in property <string> kind: "general";
+    in property <color> tint: Theme.accent-text;
+    width: 18px;
+    height: 18px;
+    Glyph {
+        width: parent.width;
+        height: parent.height;
+        tint: root.tint;
+        kind: root.kind == "audio" ? "music" : root.kind == "exe" || root.kind == "apk" ? "program"
+            : root.kind == "sheet" ? "table" : root.kind == "slides" ? "presentation"
+            : root.kind == "pdf" || root.kind == "doc" || root.kind == "text" || root.kind == "general" ? "document"
+            : root.kind;
+    }
+}
+
+// A small rounded tile in the file kind's tint, with a white symbol. Used
+// where a color helps recognition: the list, the sidebar, dialogs.
+export component KindTile inherits Rectangle {
+    in property <string> kind: "general";
+    in property <color> tile-color: Theme.tint(root.kind);
+    width: 32px;
+    height: 32px;
+    border-radius: self.width * 0.24;
+    background: root.tile-color;
+    TypeIcon {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: parent.width * 0.6;
+        height: parent.height * 0.6;
+        kind: root.kind;
+        tint: Theme.on-accent;
+    }
+}
+
+// The app icon (used by About and the browser setup only: the window title
+// and menu bar already name the app everywhere else).
+export component BrandMark inherits Rectangle {
+    width: 28px;
+    height: 28px;
+    Image {
+        width: parent.width;
+        height: parent.height;
+        source: @image-url("icon-window.png");
+        image-fit: contain;
+    }
+}
+
+// Big icon with the file extension under it (dialogs).
+export component BigTypeIcon inherits VerticalLayout {
+    in property <string> kind;
+    in property <string> ext;
+    spacing: 6px;
+    alignment: start;
+    HorizontalLayout {
+        alignment: center;
+        KindTile {
+            kind: root.kind;
+            width: 48px;
+            height: 48px;
+        }
+    }
+    if root.ext != "": Text {
+        text: root.ext;
+        horizontal-alignment: center;
+        font-size: Theme.caption-size;
+        font-weight: 600;
+        color: Theme.muted;
+    }
+}
+
+// ------------------------------------------------------------------ controls
+
+// The note under a toolbar button the mouse rests on (one per window).
+export global ToolTip {
+    in-out property <string> title;
+    in-out property <string> text;
+    in-out property <length> x;
+    in-out property <length> y;
+    // the mouse is on a button (the note shows after a moment)
+    in-out property <bool> pending;
+    in-out property <bool> shown;
+}
+
+// A borderless symbol button: toolbars, rows and headers. Always has an
+// accessible label, a hover state, a press state and a keyboard focus ring.
+export component IconButton inherits Rectangle {
+    in property <string> glyph;
+    in property <string> label;
+    in property <bool> enabled: true;
+    in property <color> tint: Theme.text;
+    in property <length> glyph-size: 16px;
+    // show the label as a tooltip after a moment (main window only)
+    in property <bool> tooltip: true;
+    callback clicked();
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: !root.enabled ? transparent : hit.pressed ? Theme.pressed : hit.has-hover ? Theme.hover : transparent;
+    opacity: root.enabled ? 1 : 0.35;
+    forward-focus: focus;
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (root.enabled && (event.text == Key.Return || event.text == " ")) {
+                root.clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+    Glyph {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: root.glyph-size;
+        height: root.glyph-size;
+        kind: root.glyph;
+        tint: root.tint;
+    }
+    hit := TouchArea {
+        enabled: root.enabled;
+        clicked => { focus.focus(); root.clicked(); }
+        changed has-hover => {
+            if (!root.tooltip) { return; }
+            if (self.has-hover) {
+                ToolTip.title = root.label;
+                ToolTip.text = root.label;
+                ToolTip.x = root.absolute-position.x;
+                ToolTip.y = root.absolute-position.y + root.height + 6px;
+                ToolTip.pending = true;
+                ToolTip.shown = false;
+            } else if (ToolTip.title == root.label) {
+                ToolTip.pending = false;
+                ToolTip.shown = false;
+            }
+        }
+        pointer-event(ev) => {
+            if (ev.kind == PointerEventKind.down) { ToolTip.pending = false; ToolTip.shown = false; }
+        }
+    }
+    if focus.has-focus: Rectangle {
+        x: -2px; y: -2px;
+        width: parent.width + 4px;
+        height: parent.height + 4px;
+        border-radius: parent.border-radius + 2px;
+        border-width: 2.5px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+// A labeled toolbar button; `primary` is the one prominent action per window.
+export component ToolbarButton inherits Rectangle {
+    in property <string> text;
+    in property <string> glyph;
+    in property <bool> primary;
+    in property <bool> enabled: true;
+    callback clicked();
+    height: 28px * min(1.25, Theme.font-scale);
+    min-width: caption.preferred-width + (root.glyph != "" ? 38px : 24px);
+    horizontal-stretch: 0;
+    border-radius: 7px;
+    background: root.primary
+        ? (hit.pressed ? Theme.accent.darker(0.18) : hit.has-hover ? Theme.accent.darker(0.08) : Theme.accent)
+        : (hit.pressed ? Theme.pressed : hit.has-hover ? Theme.hover : Theme.fill);
+    opacity: root.enabled ? 1 : 0.4;
+    forward-focus: focus;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (root.enabled && (event.text == Key.Return || event.text == " ")) { root.clicked(); return accept; }
+            reject
+        }
+    }
+    HorizontalLayout {
+        padding-left: root.glyph != "" ? 9px : 12px;
+        padding-right: 12px;
+        spacing: 5px;
+        alignment: center;
+        if root.glyph != "": VerticalLayout {
+            alignment: center;
+            Glyph {
+                width: 14px;
+                height: 14px;
+                kind: root.glyph;
+                tint: root.primary ? Theme.on-accent : Theme.text;
+            }
+        }
+        caption := Text {
+            text: root.text;
+            vertical-alignment: center;
+            font-size: Theme.body-size;
+            font-weight: 500;
+            color: root.primary ? Theme.on-accent : Theme.text;
+        }
+    }
+    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); root.clicked(); } }
+    if focus.has-focus: Rectangle {
+        x: -2px; y: -2px;
+        width: parent.width + 4px;
+        height: parent.height + 4px;
+        border-radius: parent.border-radius + 2px;
+        border-width: 2.5px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+// A toolbar search field: symbol, placeholder, and a clear button.
+export component SearchField inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder-text;
+    callback edited(string);
+    height: 28px * min(1.25, Theme.font-scale);
+    min-width: 120px;
+    border-radius: 7px;
+    background: editor.has-focus ? Theme.input-bg : Theme.fill;
+    border-width: editor.has-focus ? 2px : 0px;
+    border-color: Theme.focus-ring;
+    forward-focus: editor;
+    accessible-role: text-input;
+    accessible-label: root.placeholder-text;
+    accessible-value: root.text;
+    accessible-placeholder-text: root.placeholder-text;
+    accessible-action-set-value(v) => { root.text = v; root.edited(v); }
+    Glyph {
+        x: 8px;
+        y: (parent.height - self.height) / 2;
+        width: 14px;
+        height: 14px;
+        kind: "search";
+        tint: Theme.muted;
+    }
+    Text {
+        x: 28px;
+        width: parent.width - 54px;
+        height: parent.height;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        color: Theme.muted;
+        overflow: elide;
+        text: root.text == "" && editor.preedit-text == "" ? root.placeholder-text : "";
+        accessible-role: none;
+    }
+    editor := TextInput {
+        x: 28px;
+        width: parent.width - (root.text != "" ? 54px : 36px);
+        height: parent.height;
+        vertical-alignment: center;
+        single-line: true;
+        accessible-role: none;
+        text <=> root.text;
+        font-size: Theme.body-size;
+        color: Theme.text;
+        selection-background-color: Theme.accent.transparentize(0.55);
+        selection-foreground-color: Theme.text;
+        edited => { root.edited(self.text); }
+    }
+    if root.text != "": Rectangle {
+        x: parent.width - 24px;
+        y: (parent.height - 16px) / 2;
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: clear.has-hover ? Theme.text.transparentize(0.45) : Theme.muted.transparentize(0.35);
+        accessible-role: button;
+        accessible-label: @tr("Clear Search");
+        accessible-action-default => { root.text = ""; root.edited(""); }
+        Glyph { x: 4px; y: 4px; width: 8px; height: 8px; kind: "close"; tint: Theme.panel; }
+        clear := TouchArea { clicked => { root.text = ""; root.edited(""); editor.focus(); } }
+    }
+}
+
+// A slim determinate progress bar; never animates past what is known.
+export component ProgressBar inherits Rectangle {
+    in property <float> value;
+    // 1 running, 2 paused, 3 done, 4 error
+    in property <int> state: 1;
+    height: 4px;
+    border-radius: self.height / 2;
+    background: Theme.bar-bg;
+    clip: true;
+    accessible-role: progress-indicator;
+    accessible-value: Math.round(clamp(root.value, 0, 1) * 100);
+    accessible-value-minimum: 0;
+    accessible-value-maximum: 100;
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        height: parent.height;
+        width: parent.width * clamp(root.value, 0, 1);
+        border-radius: parent.border-radius;
+        background: root.state == 3 ? Theme.ok : root.state == 4 ? Theme.err : root.state == 2 || root.state == 0 ? Theme.muted : Theme.accent;
+        animate width { duration: Theme.reduce-motion ? 0ms : 240ms; easing: ease-out; }
+    }
+}
+
+// Segmented control (tabs inside a window).
+export component Segment inherits Rectangle {
+    in property <string> text;
+    in property <bool> active;
+    callback clicked();
+    height: 22px * min(1.3, Theme.font-scale);
+    min-width: label.preferred-width + 24px;
+    horizontal-stretch: 1;
+    border-radius: 5px;
+    background: root.active ? (Theme.dark ? Theme.text.transparentize(0.78) : Theme.panel) : hit.has-hover ? Theme.hover : transparent;
+    drop-shadow-blur: root.active && !Theme.dark ? 2px : 0px;
+    drop-shadow-color: #00000026;
+    drop-shadow-offset-y: 0.5px;
+    forward-focus: focus;
+    accessible-role: tab;
+    accessible-label: root.text;
+    accessible-item-selected: root.active;
+    accessible-action-default => { root.clicked(); }
+    focus := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Return || event.text == " ") { root.clicked(); return accept; }
+            reject
+        }
+    }
+    label := Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        font-weight: root.active ? 600 : 400;
+        color: Theme.text;
+        overflow: elide;
+    }
+    hit := TouchArea { clicked => { focus.focus(); root.clicked(); } }
+    if focus.has-focus: Rectangle {
+        border-radius: parent.border-radius;
+        border-width: 2px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+export component SegmentedBar inherits Rectangle {
+    height: 26px * min(1.3, Theme.font-scale);
+    border-radius: 7px;
+    background: Theme.fill;
+    accessible-role: tab-list;
+    HorizontalLayout {
+        padding: 2px;
+        spacing: 2px;
+        @children
+    }
+}
+
+// A disclosure button: chevron + label, for progressive disclosure.
+export component Disclosure inherits Rectangle {
+    in property <string> text;
+    in-out property <bool> expanded;
+    callback toggled(bool);
+    height: 24px * min(1.3, Theme.font-scale);
+    min-width: label.preferred-width + 30px;
+    horizontal-stretch: 0;
+    border-radius: 6px;
+    background: hit.has-hover ? Theme.hover : transparent;
+    forward-focus: focus;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-expandable: true;
+    accessible-expanded: root.expanded;
+    accessible-action-default => { root.expanded = !root.expanded; root.toggled(root.expanded); }
+    focus := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Return || event.text == " ") { root.expanded = !root.expanded; root.toggled(root.expanded); return accept; }
+            reject
+        }
+    }
+    Glyph {
+        x: 4px;
+        y: (parent.height - self.height) / 2;
+        width: 13px;
+        height: 13px;
+        kind: root.expanded ? "caret-down" : "caret-right";
+        tint: Theme.muted;
+    }
+    label := Text {
+        x: 22px;
+        height: parent.height;
+        text: root.text;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        color: Theme.text;
+    }
+    hit := TouchArea { clicked => { focus.focus(); root.expanded = !root.expanded; root.toggled(root.expanded); } }
+    if focus.has-focus: Rectangle {
+        border-radius: parent.border-radius;
+        border-width: 2px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+// A one-line inline message with a status symbol.
+export component Notice inherits HorizontalLayout {
+    in property <string> text;
+    // "info", "warn", "error", "ok", "busy"
+    in property <string> tone: "info";
+    spacing: 7px;
+    property <color> color: root.tone == "error" ? Theme.err : root.tone == "warn" ? Theme.warn : root.tone == "ok" ? Theme.ok : Theme.muted;
+    Rectangle {
+        width: 15px;
+        Glyph {
+            y: 1px;
+            width: 15px;
+            height: 15px;
+            kind: root.tone == "error" || root.tone == "warn" ? "warn" : root.tone == "ok" ? "check-circle" : root.tone == "busy" ? "clock" : "info";
+            tint: root.color;
+        }
+    }
+    Text {
+        text: root.text;
+        color: root.tone == "info" || root.tone == "busy" ? Theme.muted : root.color;
+        font-size: Theme.footnote-size;
+        wrap: word-wrap;
+        horizontal-stretch: 1;
+        vertical-alignment: center;
+    }
+}
+
+// ------------------------------------------------------------------ forms
+// System Settings–style grouped rows: label (and hint) leading, control
+// trailing, quiet separators between rows.
+
+export component FormSection inherits VerticalLayout {
+    in property <string> title;
+    in property <string> footer;
+    spacing: 6px;
+    if root.title != "": Text {
+        text: root.title;
+        font-size: Theme.body-size;
+        font-weight: 600;
+        color: Theme.text;
+        wrap: word-wrap;
+        accessible-role: text;
+    }
+    Rectangle {
+        background: Theme.group;
+        border-radius: 10px;
+        border-width: 1px;
+        border-color: Theme.grid;
+        VerticalLayout {
+            @children
+        }
+    }
+    if root.footer != "": Text {
+        text: root.footer;
+        font-size: Theme.footnote-size;
+        color: Theme.muted;
+        wrap: word-wrap;
+    }
+}
+
+export component FormRow inherits Rectangle {
+    in property <string> label;
+    in property <string> hint;
+    // the first row of a section has no separator above it
+    in property <bool> first;
+    in property <bool> enabled: true;
+    min-height: 40px * min(1.3, Theme.font-scale);
+    if !root.first: Rectangle {
+        x: 14px;
+        y: 0px;
+        width: parent.width - 14px;
+        height: 1px;
+        background: Theme.grid;
+    }
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 12px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        spacing: 16px;
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 1;
+            spacing: 2px;
+            Text {
+                text: root.label;
+                color: root.enabled ? Theme.text : Theme.muted;
+                font-size: Theme.body-size;
+                wrap: word-wrap;
+            }
+            if root.hint != "": Text {
+                text: root.hint;
+                color: Theme.muted;
+                font-size: Theme.footnote-size;
+                wrap: word-wrap;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 0;
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                @children
+            }
+        }
+    }
+}
+
+// A grouped row whose control sits under the label (wide fields, lists).
+export component FormStackRow inherits Rectangle {
+    in property <string> label;
+    in property <string> hint;
+    in property <bool> first;
+    in property <bool> enabled: true;
+    if !root.first: Rectangle {
+        x: 14px;
+        y: 0px;
+        width: parent.width - 14px;
+        height: 1px;
+        background: Theme.grid;
+    }
+    VerticalLayout {
+        padding-left: 14px;
+        padding-right: 12px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        spacing: 7px;
+        if root.label != "": Text {
+            text: root.label;
+            color: root.enabled ? Theme.text : Theme.muted;
+            font-size: Theme.body-size;
+            wrap: word-wrap;
+        }
+        @children
+        if root.hint != "": Text {
+            text: root.hint;
+            color: Theme.muted;
+            font-size: Theme.footnote-size;
+            wrap: word-wrap;
+        }
+    }
+}
+
+// A labeled field for dialogs: leading label column of a fixed width.
+export component FieldRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <length> label-width: 110px;
+    spacing: 10px;
+    Text {
+        width: root.label-width * min(1.3, Theme.font-scale);
+        text: root.label;
+        color: Theme.text;
+        font-size: Theme.body-size;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        wrap: word-wrap;
+    }
+    @children
+}
+
+// Empty and loading states: one symbol, one sentence, the next action.
+export component EmptyState inherits VerticalLayout {
+    in property <string> glyph: "tray";
+    in property <string> title;
+    in property <string> message;
+    spacing: 8px;
+    alignment: center;
+    HorizontalLayout {
+        alignment: center;
+        Rectangle {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: Theme.fill;
+            Glyph { x: 16px; y: 16px; width: 24px; height: 24px; kind: root.glyph; tint: Theme.muted; }
+        }
+    }
+    Rectangle { height: 4px; }
+    Text {
+        text: root.title;
+        horizontal-alignment: center;
+        color: Theme.text;
+        font-size: Theme.title3-size;
+        font-weight: 600;
+        wrap: word-wrap;
+    }
+    if root.message != "": Text {
+        text: root.message;
+        horizontal-alignment: center;
+        color: Theme.muted;
+        font-size: Theme.body-size;
+        wrap: word-wrap;
+    }
+    Rectangle { height: 6px; }
+    HorizontalLayout {
+        alignment: center;
+        spacing: 10px;
+        @children
+    }
+}
+
+// The standard field of a few custom forms (single line, with a context menu).
+export component QuietField inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder-text;
+    in property <string> label;
+    in property <bool> enabled: true;
+    in property <bool> read-only: false;
+    in property <InputType> input-type: InputType.text;
+    callback edited(string);
+    callback accepted(string);
+    height: 24px * min(1.4, Theme.font-scale);
+    min-width: 60px;
+    horizontal-stretch: 1;
+    border-radius: 6px;
+    background: root.read-only ? Theme.fill : Theme.input-bg;
+    border-width: editor.has-focus ? 2px : 1px;
+    border-color: editor.has-focus ? Theme.focus-ring : Theme.line;
+    opacity: root.enabled ? 1 : 0.45;
+    forward-focus: editor;
+    accessible-role: text-input;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-value: root.input-type == InputType.password ? "" : root.text;
+    accessible-placeholder-text: root.placeholder-text;
+    accessible-read-only: root.read-only;
+    accessible-action-set-value(v) => { root.text = v; root.edited(v); }
+    accessible-action-set-selection-offsets(anchor, focus) => { editor.set-selection-offsets(anchor, focus); }
+    Text {
+        x: 8px;
+        width: parent.width - 16px;
+        height: parent.height;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        color: Theme.muted;
+        overflow: elide;
+        text: root.text == "" && editor.preedit-text == "" ? root.placeholder-text : "";
+        accessible-role: none;
+    }
+    ContextMenuArea {
+        enabled: root.enabled;
+        Menu {
+            MenuItem { title: @tr("Undo"); enabled: !root.read-only; activated => { editor.undo(); } }
+            MenuItem { title: @tr("Redo"); enabled: !root.read-only; activated => { editor.redo(); } }
+            MenuSeparator { }
+            MenuItem { title: @tr("Cut"); enabled: !root.read-only; activated => { editor.cut(); } }
+            MenuItem { title: @tr("Copy"); activated => { editor.copy(); } }
+            MenuItem { title: @tr("Paste"); enabled: !root.read-only; activated => { editor.paste(); } }
+            MenuItem { title: @tr("Select All"); activated => { editor.select-all(); } }
+        }
+        editor := TextInput {
+            x: 8px;
+            width: parent.width - 16px;
+            height: parent.height;
+            vertical-alignment: center;
+            single-line: true;
+            accessible-role: none;
+            enabled: root.enabled;
+            read-only: root.read-only;
+            text <=> root.text;
+            input-type: root.input-type;
+            font-size: Theme.body-size;
+            color: Theme.text;
+            selection-background-color: Theme.accent.transparentize(0.55);
+            selection-foreground-color: Theme.text;
+            accepted => { root.accepted(self.text); }
+            edited => { root.edited(self.text); }
+        }
+    }
+}
+
+// A push button drawn with the design tokens (for the few places that need a
+// taller target than the standard 22 pt control, such as toolbars).
+export component QuietButton inherits ToolbarButton { }
+
+// A button of a window's own title bar (windows drawn without the system
+// frame on Windows): "tray" (hide next to the clock), "min" or "close".
+export component CaptionButton inherits Rectangle {
+    in property <string> kind;
+    callback clicked();
+    out property <bool> hovered: ca.has-hover;
+    width: 44px;
+    background: ca.pressed ? (root.kind == "close" ? Theme.err : Theme.pressed) : ca.has-hover ? (root.kind == "close" ? Theme.err : Theme.hover) : transparent;
+    accessible-role: button;
+    accessible-label: root.kind == "close" ? @tr("Close") : root.kind == "min" ? @tr("Minimize") : @tr("Hide next to the clock");
+    accessible-action-default => { root.clicked(); }
+    ca := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+    Path {
+        x: (parent.width - 10px) / 2;
+        y: (parent.height - 10px) / 2;
+        width: 10px;
+        height: 10px;
+        viewbox-width: 10;
+        viewbox-height: 10;
+        stroke-width: 1px;
+        stroke: root.kind == "close" && ca.has-hover ? white : Theme.text;
+        fill: transparent;
+        commands: root.kind == "close" ? "M 0 0 L 10 10 M 10 0 L 0 10"
+            : root.kind == "min" ? "M 0 5.5 L 10 5.5"
+            // an arrow down into a tray
+            : "M 5 0 L 5 6.5 M 2.2 3.8 L 5 6.5 L 7.8 3.8 M 0.5 6.5 L 0.5 9.5 L 9.5 9.5 L 9.5 6.5";
+    }
+}
+
+// ------------------------------------------------------------------ lists
+
+// A sidebar entry: symbol or tinted tile, label and an optional count.
+export component TreeItem inherits Rectangle {
+    in property <string> text;
+    // "tray", "arrow-circle", "check-circle", "queue", "play" or a file kind
+    in property <string> icon;
+    // File kinds use a small tinted tile; library and queues use symbols.
+    in property <bool> category-icon: false;
+    in property <string> count;
+    in property <int> indent;
+    in property <bool> selected;
+    in property <bool> bold;
+    // a branch that opens / closes
+    in property <bool> expandable;
+    in property <bool> expanded;
+    callback clicked();
+    callback toggle();
+    // right click, at this position inside the item
+    callback context(length, length);
+    height: max(28px, label.preferred-height + 10px);
+    background: root.selected ? Theme.select : ta.has-hover ? Theme.hover : transparent;
+    border-radius: 6px;
+    forward-focus: focus;
+    accessible-role: list-item;
+    accessible-label: root.count != "" ? root.text + ", " + root.count : root.text;
+    accessible-item-selected: root.selected;
+    accessible-action-default => { root.clicked(); }
+    focus := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Return || event.text == " ") { root.clicked(); return accept; }
+            reject
+        }
+    }
+    ta := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        clicked => {
+            root.clicked();
+        }
+        double-clicked => {
+            root.toggle();
+        }
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.right && ev.kind == PointerEventKind.up) {
+                root.clicked();
+                root.context(self.mouse-x, self.mouse-y);
+            }
+        }
+    }
+    HorizontalLayout {
+        padding-left: 8px + root.indent * 16px;
+        padding-right: 8px;
+        spacing: 8px;
+        if root.expandable: Rectangle {
+            width: 12px;
+            Glyph {
+                y: (parent.height - 12px) / 2;
+                width: 12px;
+                height: 12px;
+                kind: root.expanded ? "caret-down" : "caret-right";
+                tint: Theme.muted;
+            }
+            TouchArea {
+                x: -4px;
+                width: 24px;
+                height: parent.height;
+                clicked => { root.toggle(); }
+            }
+        }
+        Rectangle {
+            width: 18px;
+            if root.category-icon: KindTile {
+                y: (parent.height - self.height) / 2;
+                width: 18px;
+                height: 18px;
+                kind: root.icon;
+            }
+            if !root.category-icon: Glyph {
+                y: (parent.height - self.height) / 2;
+                width: 16px;
+                height: 16px;
+                kind: root.icon;
+                tint: root.icon == "play" ? Theme.ok : Theme.accent;
+            }
+        }
+        label := Text {
+            text: root.text;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+            color: Theme.text;
+            font-size: Theme.body-size;
+            font-weight: root.bold ? 600 : 400;
+        }
+        Text {
+            text: root.count;
+            vertical-alignment: center;
+            color: Theme.muted;
+            font-size: Theme.footnote-size;
+        }
+    }
+    if focus.has-focus: Rectangle {
+        border-radius: parent.border-radius;
+        border-width: 2px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+// A sidebar section title, optionally with an add button.
+export component SidebarHeading inherits HorizontalLayout {
+    in property <string> text;
+    in property <string> action-label;
+    callback action();
+    height: 26px * min(1.3, Theme.font-scale);
+    padding-left: 8px;
+    Text {
+        text: root.text;
+        color: Theme.muted;
+        font-size: Theme.caption-size;
+        font-weight: 600;
+        vertical-alignment: center;
+        horizontal-stretch: 1;
+        overflow: elide;
+    }
+    if root.action-label != "": IconButton {
+        width: 22px;
+        height: 22px;
+        glyph: "plus";
+        glyph-size: 13px;
+        tint: Theme.muted;
+        label: root.action-label;
+        clicked => { root.action(); }
+    }
+}
+
+export component HeaderCell inherits Rectangle {
+    in property <string> text;
+    in property <TextHorizontalAlignment> align: left;
+    // sorting: this column's key, the current key and direction
+    in property <string> key;
+    in property <string> sort-by;
+    in property <bool> sort-desc;
+    // drag the right edge to resize, drag the title to move it
+    in property <bool> adjustable;
+    callback sort(string);
+    // the new width while the edge is dragged; done when it is let go
+    callback resized(length);
+    callback resize-done();
+    // the title was dragged and let go at `x` (in the header)
+    callback dropped(length);
+    // a long (Arabic) title is cut at its own column, never over the next one
+    clip: true;
+    property <bool> moving;
+    property <length> start-width;
+    property <length> start-x;
+    height: 28px;
+    background: root.moving ? Theme.select : ta.has-hover && (root.key != "" || root.adjustable) ? Theme.hover : transparent;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-action-default => { if (root.key != "") { root.sort(root.key); } }
+    ta := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        enabled: root.key != "" || root.adjustable;
+        mouse-cursor: root.moving ? MouseCursor.grabbing : MouseCursor.default;
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                root.moving = false;
+            }
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.up && root.moving) {
+                root.dropped(root.x + self.mouse-x);
+            }
+        }
+        moved => {
+            if (root.adjustable && self.pressed && abs(self.mouse-x - self.pressed-x) > 10px) {
+                root.moving = true;
+            }
+        }
+        clicked => {
+            if (!root.moving && root.key != "") {
+                root.sort(root.key);
+            }
+            root.moving = false;
+        }
+    }
+    Text {
+        x: 8px;
+        width: parent.width - 24px;
+        height: parent.height;
+        text: root.text;
+        horizontal-alignment: root.align;
+        vertical-alignment: center;
+        font-size: Theme.footnote-size;
+        font-weight: root.key != "" && root.key == root.sort-by ? 600 : 400;
+        color: root.key != "" && root.key == root.sort-by ? Theme.text : Theme.muted;
+        overflow: elide;
+    }
+    if root.key != "" && root.key == root.sort-by: Glyph {
+        x: parent.width - 16px;
+        y: (parent.height - 12px) / 2;
+        width: 12px;
+        height: 12px;
+        kind: root.sort-desc ? "caret-down" : "caret-up";
+        tint: Theme.muted;
+    }
+    Rectangle {
+        x: parent.width - 1px;
+        y: 7px;
+        width: 1px;
+        height: parent.height - 14px;
+        background: Theme.grid;
+    }
+    // the edge to resize the column
+    if root.adjustable: edge := TouchArea {
+        x: parent.width - 5px;
+        width: 8px;
+        height: parent.height;
+        mouse-cursor: MouseCursor.col-resize;
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                root.start-width = root.width;
+                root.start-x = self.absolute-position.x + self.mouse-x;
+            }
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.up) {
+                root.resize-done();
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                // measured on the screen: the edge itself moves with the column
+                root.resized(max(36px, root.start-width + self.absolute-position.x + self.mouse-x - root.start-x));
+            }
+        }
+    }
+}
+
+export component Cell inherits Text {
+    vertical-alignment: center;
+    font-size: Theme.body-size;
+    color: Theme.text;
+    overflow: elide;
+}
+
+// A check mark box for selectable list rows (grabber, torrent, playlist).
+export component CheckMark inherits Rectangle {
+    in property <bool> checked;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border-width: root.checked ? 0px : 1px;
+    border-color: Theme.muted.transparentize(0.3);
+    background: root.checked ? Theme.accent : Theme.input-bg;
+    if root.checked: Glyph {
+        x: 2px;
+        y: 2px;
+        width: 10px;
+        height: 10px;
+        kind: "check";
+        tint: Theme.on-accent;
+    }
+}
+
+// A bordered list surface with a quiet header (dialog tables).
+export component ListFrame inherits Rectangle {
+    background: Theme.panel;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: Theme.grid;
+    clip: true;
+}
+
+// ---- menus (right click and the toolbar's More menu)
+export component MenuPanel inherits Rectangle {
+    background: Theme.popover;
+    border-width: 1px;
+    border-color: Theme.dark ? Theme.line : Theme.grid;
+    border-radius: 10px;
+    drop-shadow-blur: 22px;
+    drop-shadow-color: Theme.dark ? #00000090 : #00000038;
+    drop-shadow-offset-y: 6px;
+}
+
+export component MenuEntry inherits Rectangle {
+    in property <string> text;
+    in property <string> glyph;
+    in property <color> glyph-color: Theme.text;
+    in property <bool> enabled: true;
+    in property <bool> bold;
+    in property <bool> indent;
+    in property <bool> destructive;
+    in property <bool> checked;
+    callback clicked();
+    height: max(24px, label.preferred-height + 8px);
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    forward-focus: keyboard;
+    keyboard := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (root.enabled && (event.text == Key.Return || event.text == " ")) { root.clicked(); return accept; }
+            reject
+        }
+    }
+    property <bool> lit: (ta.has-hover || keyboard.has-focus) && root.enabled;
+    border-radius: 5px;
+    background: root.lit ? Theme.accent : transparent;
+    ta := TouchArea {
+        width: parent.width;
+        height: parent.height;
+        enabled: root.enabled;
+        clicked => {
+            keyboard.focus();
+            root.clicked();
+        }
+    }
+    HorizontalLayout {
+        padding-left: root.indent ? 30px : 8px;
+        padding-right: 12px;
+        spacing: 8px;
+        opacity: root.enabled ? 1.0 : 0.4;
+        Rectangle {
+            width: 15px;
+            if root.glyph != "" || root.checked: Glyph {
+                y: (parent.height - 15px) / 2;
+                width: 15px;
+                height: 15px;
+                kind: root.checked ? "check" : root.glyph;
+                tint: root.lit ? Theme.on-accent : root.destructive ? Theme.err : root.glyph-color;
+            }
+        }
+        label := Text {
+            text: root.text;
+            color: root.lit ? Theme.on-accent : root.destructive ? Theme.err : Theme.text;
+            vertical-alignment: center;
+            font-size: Theme.body-size;
+            font-weight: root.bold ? 600 : 400;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+    }
+}
+
+export component MenuSep inherits Rectangle {
+    height: 9px;
+    Rectangle {
+        x: 8px;
+        y: 4px;
+        width: parent.width - 16px;
+        height: 1px;
+        background: Theme.grid;
+    }
+}
+
+export component MenuLabel inherits Rectangle {
+    in property <string> text;
+    height: 22px;
+    Text {
+        x: 8px;
+        width: parent.width - 16px;
+        text: root.text;
+        font-size: Theme.caption-size;
+        font-weight: 600;
+        color: Theme.muted;
+        vertical-alignment: center;
+        height: parent.height;
+        overflow: elide;
+    }
+}

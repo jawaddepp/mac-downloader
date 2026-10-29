@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" class="popup-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mac Downloader</title>
+  <link rel="stylesheet" href="apple-ui.css">
+</head>
+<body class="popup">
+  <header class="popup-header">
+    <img class="app-icon" src="icons/icon128.png" alt="" width="32" height="32">
+    <div class="header-copy">
+      <h1>Mac Downloader</h1>
+      <p class="connection" id="status" role="status" aria-live="polite">Connecting…</p>
+    </div>
+    <button class="icon-button" id="settings" type="button" title="Extension Settings" aria-label="Extension Settings"><svg class="glyph" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+  </header>
+  <main class="popup-content">
+    <div class="group integration-row">
+      <label class="integration-copy" for="enabled"><strong id="onText">Browser Integration</strong><small id="onHint">Send downloads to Mac Downloader</small></label>
+      <span class="switch-control"><input type="checkbox" id="enabled" role="switch" checked aria-label="Browser Integration" aria-describedby="onHint"><span class="switch-track" aria-hidden="true"></span></span>
+    </div>
+    <section aria-labelledby="pageHeading">
+      <div class="section-heading"><h2 id="pageHeading">On This Page</h2><span class="item-count" id="mediaCount"></span></div>
+      <div class="group media-group">
+        <p class="video-title" id="videoTitle" hidden></p>
+        <div class="media-list" id="media">
+          <div class="media-state is-loading" role="status"><span class="spinner" aria-hidden="true"></span><strong>Looking for the current video…</strong></div>
+        </div>
+      </div>
+    </section>
+    <details class="widget-settings">
+      <summary><svg class="glyph disclosure-chevron" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Video Button Size</summary>
+      <div class="scale-row"><input type="range" id="scale" min="50" max="200" step="5" value="100" aria-label="Video button size"><output id="scaleText" for="scale">100%</output><button class="text-button" id="scaleReset" type="button">Reset</button></div>
+    </details>
+  </main>
+  <footer class="popup-footer">
+    <p class="connection-hint" id="connectionHint" hidden>Mac Downloader needs to be open to receive downloads.</p>
+    <a class="button-link secondary-action" id="openApp" href="ezoo-download://open">Open Mac Downloader</a>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>
