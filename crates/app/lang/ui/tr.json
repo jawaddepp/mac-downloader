@@ -555,5 +555,8 @@
  "{} left": "{} kaldı",
  "{} of {}": "{} / {}",
  "{} selected": "{} seçili",
- "automatic (Downloads/{})": "otomatik (İndirilenler/{})"
+ "automatic (Downloads/{})": "otomatik (İndirilenler/{})",
+ "What's New": "Yenilikler",
+ "Continue": "Devam",
+ "Mac Downloader is free and has no ads.": "Mac Downloader ücretsizdir ve reklam içermez."
 }

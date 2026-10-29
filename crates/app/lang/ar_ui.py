@@ -573,4 +573,7 @@ AR = {
     "{} of {}": "{} من {}",
     "{} selected": "تم تحديد {}",
     "automatic (Downloads/{})": "تلقائي (Downloads/{})",
+    "What's New": "ما الجديد",
+    "Continue": "متابعة",
+    "Mac Downloader is free and has no ads.": "Mac Downloader مجاني وبلا إعلانات.",
 }

@@ -163,6 +163,12 @@ export global Theme {
     out property <color> hover: platform-text.transparentize(dark ? 0.9 : 0.94);
     out property <color> pressed: platform-text.transparentize(dark ? 0.82 : 0.88);
     out property <color> fill: platform-text.transparentize(dark ? 0.9 : 0.95);
+    // Raised controls (secondary buttons, pop-ups, toolbar capsules): a
+    // light, lifted surface in both appearances.
+    out property <color> control: dark ? platform-text.transparentize(0.86) : #ffffff;
+    out property <color> control-hover: dark ? platform-text.transparentize(0.8) : #f7f7f8;
+    out property <color> control-border: dark ? platform-text.transparentize(0.9) : platform-text.transparentize(0.86);
+    out property <color> shadow: dark ? #00000066 : #00000024;
     // grouped settings and inspector sections on the window background
     out property <color> group: dark ? platform-text.transparentize(0.94) : platform-text.transparentize(0.975);
     out property <color> focus-ring: platform-accent.transparentize(0.25);
@@ -260,6 +266,8 @@ export component Glyph inherits Rectangle {
         : root.kind == "caret-up" ? "M 4.5 9.8 L 8 6.3 L 11.5 9.8"
         : root.kind == "caret-right" ? "M 6.2 4.5 L 9.7 8 L 6.2 11.5"
         : root.kind == "caret-left" ? "M 9.8 4.5 L 6.3 8 L 9.8 11.5"
+        : root.kind == "chevrons" ? "M 5 6 L 8 3 L 11 6 M 5 10 L 8 13 L 11 10"
+        : root.kind == "sparkles" ? "M 8 2 L 9.3 6.7 L 14 8 L 9.3 9.3 L 8 14 L 6.7 9.3 L 2 8 L 6.7 6.7 Z"
         : root.kind == "bulb" ? "M 5.5 12 L 5 10 A 4.7 4.7 0 1 1 11 10 L 10.5 12 Z M 6 14 L 10 14"
         : root.kind == "queue" ? "M 2.5 3.5 L 13.5 3.5 M 2.5 7.5 L 13.5 7.5 M 2.5 11.5 L 7 11.5 M 10.5 10 L 13.5 12 L 10.5 14 Z"
         : root.kind == "search" ? "M 6.8 2.3 A 4.5 4.5 0 1 1 6.79 2.3 Z M 10.1 10.1 L 13.6 13.6"
@@ -414,11 +422,11 @@ export component IconButton inherits Rectangle {
     // show the label as a tooltip after a moment (main window only)
     in property <bool> tooltip: true;
     callback clicked();
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: self.height / 2;
     background: !root.enabled ? transparent : hit.pressed ? Theme.pressed : hit.has-hover ? Theme.hover : transparent;
-    opacity: root.enabled ? 1 : 0.35;
+    opacity: root.enabled ? 1 : 0.3;
     forward-focus: focus;
     accessible-role: button;
     accessible-label: root.label;
@@ -473,6 +481,25 @@ export component IconButton inherits Rectangle {
     }
 }
 
+// A capsule that groups related toolbar buttons, like the floating toolbar
+// groups of current macOS.
+export component ToolbarGroup inherits Rectangle {
+    height: 32px * min(1.25, Theme.font-scale);
+    border-radius: self.height / 2;
+    background: Theme.control;
+    border-width: 1px;
+    border-color: Theme.control-border;
+    drop-shadow-blur: 6px;
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: Theme.shadow.transparentize(0.3);
+    HorizontalLayout {
+        padding-left: 1px;
+        padding-right: 1px;
+        alignment: center;
+        @children
+    }
+}
+
 // A labeled toolbar button; `primary` is the one prominent action per window.
 export component ToolbarButton inherits Rectangle {
     in property <string> text;
@@ -480,10 +507,13 @@ export component ToolbarButton inherits Rectangle {
     in property <bool> primary;
     in property <bool> enabled: true;
     callback clicked();
-    height: 28px * min(1.25, Theme.font-scale);
-    min-width: caption.preferred-width + (root.glyph != "" ? 38px : 24px);
+    height: 32px * min(1.25, Theme.font-scale);
+    min-width: caption.preferred-width + (root.glyph != "" ? 44px : 30px);
     horizontal-stretch: 0;
-    border-radius: 7px;
+    border-radius: self.height / 2;
+    drop-shadow-blur: 6px;
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: root.primary ? Theme.accent.transparentize(0.6) : Theme.shadow.transparentize(0.3);
     background: root.primary
         ? (hit.pressed ? Theme.accent.darker(0.18) : hit.has-hover ? Theme.accent.darker(0.08) : Theme.accent)
         : (hit.pressed ? Theme.pressed : hit.has-hover ? Theme.hover : Theme.fill);
@@ -501,8 +531,8 @@ export component ToolbarButton inherits Rectangle {
         }
     }
     HorizontalLayout {
-        padding-left: root.glyph != "" ? 9px : 12px;
-        padding-right: 12px;
+        padding-left: root.glyph != "" ? 12px : 15px;
+        padding-right: 15px;
         spacing: 5px;
         alignment: center;
         if root.glyph != "": VerticalLayout {
@@ -518,7 +548,7 @@ export component ToolbarButton inherits Rectangle {
             text: root.text;
             vertical-alignment: center;
             font-size: Theme.body-size;
-            font-weight: 500;
+            font-weight: 600;
             color: root.primary ? Theme.on-accent : Theme.text;
         }
     }
@@ -538,12 +568,15 @@ export component SearchField inherits Rectangle {
     in-out property <string> text;
     in property <string> placeholder-text;
     callback edited(string);
-    height: 28px * min(1.25, Theme.font-scale);
+    height: 32px * min(1.25, Theme.font-scale);
     min-width: 120px;
-    border-radius: 7px;
-    background: editor.has-focus ? Theme.input-bg : Theme.fill;
-    border-width: editor.has-focus ? 2px : 0px;
-    border-color: Theme.focus-ring;
+    border-radius: self.height / 2;
+    background: editor.has-focus ? Theme.input-bg : Theme.control;
+    drop-shadow-blur: 6px;
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: Theme.shadow.transparentize(0.3);
+    border-width: editor.has-focus ? 3px : 1px;
+    border-color: editor.has-focus ? Theme.focus-ring : Theme.control-border;
     forward-focus: editor;
     accessible-role: text-input;
     accessible-label: root.placeholder-text;
@@ -551,7 +584,7 @@ export component SearchField inherits Rectangle {
     accessible-placeholder-text: root.placeholder-text;
     accessible-action-set-value(v) => { root.text = v; root.edited(v); }
     Glyph {
-        x: 8px;
+        x: 11px;
         y: (parent.height - self.height) / 2;
         width: 14px;
         height: 14px;
@@ -559,8 +592,8 @@ export component SearchField inherits Rectangle {
         tint: Theme.muted;
     }
     Text {
-        x: 28px;
-        width: parent.width - 54px;
+        x: 31px;
+        width: parent.width - 57px;
         height: parent.height;
         vertical-alignment: center;
         font-size: Theme.body-size;
@@ -570,8 +603,8 @@ export component SearchField inherits Rectangle {
         accessible-role: none;
     }
     editor := TextInput {
-        x: 28px;
-        width: parent.width - (root.text != "" ? 54px : 36px);
+        x: 31px;
+        width: parent.width - (root.text != "" ? 57px : 42px);
         height: parent.height;
         vertical-alignment: center;
         single-line: true;
@@ -584,7 +617,7 @@ export component SearchField inherits Rectangle {
         edited => { root.edited(self.text); }
     }
     if root.text != "": Rectangle {
-        x: parent.width - 24px;
+        x: parent.width - 26px;
         y: (parent.height - 16px) / 2;
         width: 16px;
         height: 16px;
@@ -603,7 +636,7 @@ export component ProgressBar inherits Rectangle {
     in property <float> value;
     // 1 running, 2 paused, 3 done, 4 error
     in property <int> state: 1;
-    height: 4px;
+    height: 5px;
     border-radius: self.height / 2;
     background: Theme.bar-bg;
     clip: true;
@@ -627,12 +660,12 @@ export component Segment inherits Rectangle {
     in property <string> text;
     in property <bool> active;
     callback clicked();
-    height: 22px * min(1.3, Theme.font-scale);
-    min-width: label.preferred-width + 24px;
+    height: 26px * min(1.3, Theme.font-scale);
+    min-width: label.preferred-width + 28px;
     horizontal-stretch: 1;
-    border-radius: 5px;
-    background: root.active ? (Theme.dark ? Theme.text.transparentize(0.78) : Theme.panel) : hit.has-hover ? Theme.hover : transparent;
-    drop-shadow-blur: root.active && !Theme.dark ? 2px : 0px;
+    border-radius: self.height / 2;
+    background: root.active ? (Theme.dark ? Theme.text.transparentize(0.78) : #ffffff) : hit.has-hover ? Theme.hover : transparent;
+    drop-shadow-blur: root.active && !Theme.dark ? 3px : 0px;
     drop-shadow-color: #00000026;
     drop-shadow-offset-y: 0.5px;
     forward-focus: focus;
@@ -666,8 +699,8 @@ export component Segment inherits Rectangle {
 }
 
 export component SegmentedBar inherits Rectangle {
-    height: 26px * min(1.3, Theme.font-scale);
-    border-radius: 7px;
+    height: 30px * min(1.3, Theme.font-scale);
+    border-radius: self.height / 2;
     background: Theme.fill;
     accessible-role: tab-list;
     HorizontalLayout {
@@ -768,7 +801,7 @@ export component FormSection inherits VerticalLayout {
     }
     Rectangle {
         background: Theme.group;
-        border-radius: 10px;
+        border-radius: 14px;
         border-width: 1px;
         border-color: Theme.grid;
         VerticalLayout {
@@ -789,7 +822,7 @@ export component FormRow inherits Rectangle {
     // the first row of a section has no separator above it
     in property <bool> first;
     in property <bool> enabled: true;
-    min-height: 40px * min(1.3, Theme.font-scale);
+    min-height: 44px * min(1.3, Theme.font-scale);
     if !root.first: Rectangle {
         x: 14px;
         y: 0px;
@@ -935,13 +968,13 @@ export component QuietField inherits Rectangle {
     in property <InputType> input-type: InputType.text;
     callback edited(string);
     callback accepted(string);
-    height: 24px * min(1.4, Theme.font-scale);
+    height: 28px * min(1.3, Theme.font-scale);
     min-width: 60px;
     horizontal-stretch: 1;
-    border-radius: 6px;
+    border-radius: 8px;
     background: root.read-only ? Theme.fill : Theme.input-bg;
-    border-width: editor.has-focus ? 2px : 1px;
-    border-color: editor.has-focus ? Theme.focus-ring : Theme.line;
+    border-width: editor.has-focus ? 3px : 1px;
+    border-color: editor.has-focus ? Theme.focus-ring : Theme.control-border;
     opacity: root.enabled ? 1 : 0.45;
     forward-focus: editor;
     accessible-role: text-input;
@@ -994,6 +1027,9 @@ export component QuietField inherits Rectangle {
         }
     }
 }
+
+// The single-line text field of every window.
+export component LineEdit inherits QuietField { }
 
 // A push button drawn with the design tokens (for the few places that need a
 // taller target than the standard 22 pt control, such as toolbars).
@@ -1052,9 +1088,9 @@ export component TreeItem inherits Rectangle {
     callback toggle();
     // right click, at this position inside the item
     callback context(length, length);
-    height: max(28px, label.preferred-height + 10px);
+    height: max(30px, label.preferred-height + 12px);
     background: root.selected ? Theme.select : ta.has-hover ? Theme.hover : transparent;
-    border-radius: 6px;
+    border-radius: 9px;
     forward-focus: focus;
     accessible-role: list-item;
     accessible-label: root.count != "" ? root.text + ", " + root.count : root.text;
@@ -1298,7 +1334,7 @@ export component CheckMark inherits Rectangle {
 // A bordered list surface with a quiet header (dialog tables).
 export component ListFrame inherits Rectangle {
     background: Theme.panel;
-    border-radius: 8px;
+    border-radius: 12px;
     border-width: 1px;
     border-color: Theme.grid;
     clip: true;
@@ -1309,8 +1345,8 @@ export component MenuPanel inherits Rectangle {
     background: Theme.popover;
     border-width: 1px;
     border-color: Theme.dark ? Theme.line : Theme.grid;
-    border-radius: 10px;
-    drop-shadow-blur: 22px;
+    border-radius: 13px;
+    drop-shadow-blur: 26px;
     drop-shadow-color: Theme.dark ? #00000090 : #00000038;
     drop-shadow-offset-y: 6px;
 }
@@ -1339,7 +1375,7 @@ export component MenuEntry inherits Rectangle {
         }
     }
     property <bool> lit: (ta.has-hover || keyboard.has-focus) && root.enabled;
-    border-radius: 5px;
+    border-radius: 7px;
     background: root.lit ? Theme.accent : transparent;
     ta := TouchArea {
         width: parent.width;
@@ -1403,3 +1439,154 @@ export component MenuLabel inherits Rectangle {
         overflow: elide;
     }
 }
+
+// ------------------------------------------------------------------ modern controls
+// These replace the standard widgets of the same names in every window:
+// capsule push buttons, rounded fields and pop-up buttons with a chevron.
+
+export component Button inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary;
+    in property <bool> enabled: true;
+    in property <bool> destructive;
+    out property <bool> has-focus: focus.has-focus;
+    callback clicked();
+    min-height: 30px * min(1.3, Theme.font-scale);
+    max-height: 30px * min(1.3, Theme.font-scale);
+    min-width: max(70px, label.preferred-width + 30px);
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    border-radius: self.height / 2;
+    background: root.primary
+        ? (hit.pressed ? Theme.accent.darker(0.16) : hit.has-hover ? Theme.accent.darker(0.06) : Theme.accent)
+        : (hit.pressed ? Theme.pressed : hit.has-hover ? Theme.control-hover : Theme.control);
+    border-width: root.primary ? 0px : 1px;
+    border-color: Theme.control-border;
+    drop-shadow-blur: root.enabled ? 3px : 0px;
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: root.primary ? Theme.accent.transparentize(0.65) : Theme.shadow.transparentize(0.4);
+    opacity: root.enabled ? 1 : 0.45;
+    forward-focus: focus;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (root.enabled && (event.text == Key.Return || event.text == " ")) { root.clicked(); return accept; }
+            reject
+        }
+    }
+    label := Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        font-weight: root.primary ? 600 : 500;
+        color: root.primary ? Theme.on-accent : root.destructive ? Theme.err : Theme.text;
+        overflow: elide;
+    }
+    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); root.clicked(); } }
+    if focus.has-focus: Rectangle {
+        x: -3px; y: -3px;
+        width: parent.width + 6px;
+        height: parent.height + 6px;
+        border-radius: self.height / 2;
+        border-width: 3px;
+        border-color: Theme.focus-ring;
+    }
+}
+
+// A pop-up button: the choice and an up/down chevron; the list opens in a
+// rounded menu with a check on the current item.
+export component ComboBox inherits Rectangle {
+    in property <[string]> model;
+    in-out property <int> current-index: 0;
+    out property <string> current-value: root.current-index >= 0 && root.current-index < root.model.length ? root.model[root.current-index] : "";
+    in property <bool> enabled: true;
+    callback selected(string);
+    min-height: 28px * min(1.3, Theme.font-scale);
+    max-height: 28px * min(1.3, Theme.font-scale);
+    min-width: 90px;
+    preferred-width: max(140px, value-label.preferred-width + 44px);
+    border-radius: 8px;
+    background: hit.pressed ? Theme.pressed : hit.has-hover ? Theme.control-hover : Theme.control;
+    border-width: 1px;
+    border-color: Theme.control-border;
+    drop-shadow-blur: 2px;
+    drop-shadow-offset-y: 0.5px;
+    drop-shadow-color: Theme.shadow.transparentize(0.5);
+    opacity: root.enabled ? 1 : 0.45;
+    forward-focus: focus;
+    accessible-role: combobox;
+    accessible-value: root.current-value;
+    accessible-enabled: root.enabled;
+    accessible-expandable: true;
+    accessible-action-default => { if (root.enabled) { list.show(); } }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if (!root.enabled) { return reject; }
+            if (event.text == Key.Return || event.text == " ") { list.show(); return accept; }
+            if (event.text == Key.UpArrow && root.current-index > 0) { root.current-index -= 1; root.selected(root.current-value); return accept; }
+            if (event.text == Key.DownArrow && root.current-index < root.model.length - 1) { root.current-index += 1; root.selected(root.current-value); return accept; }
+            reject
+        }
+    }
+    value-label := Text {
+        x: 10px;
+        width: parent.width - 34px;
+        height: parent.height;
+        text: root.current-value;
+        vertical-alignment: center;
+        font-size: Theme.body-size;
+        color: Theme.text;
+        overflow: elide;
+    }
+    Glyph {
+        x: parent.width - 22px;
+        y: (parent.height - self.height) / 2;
+        width: 12px;
+        height: 12px;
+        kind: "chevrons";
+        tint: Theme.muted;
+    }
+    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); list.show(); } }
+    if focus.has-focus: Rectangle {
+        x: -3px; y: -3px;
+        width: parent.width + 6px;
+        height: parent.height + 6px;
+        border-radius: 11px;
+        border-width: 3px;
+        border-color: Theme.focus-ring;
+    }
+    list := PopupWindow {
+        x: 0px;
+        y: root.height + 4px;
+        width: max(root.width, 180px);
+        height: min(320px, items.preferred-height);
+        MenuPanel {
+            width: parent.width;
+            height: parent.height;
+            Flickable {
+                content-height: items.preferred-height;
+                items := VerticalLayout {
+                    padding: 5px;
+                    for item[i] in root.model: MenuEntry {
+                        text: item;
+                        checked: i == root.current-index;
+                        clicked => {
+                            root.current-index = i;
+                            list.close();
+                            root.selected(item);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

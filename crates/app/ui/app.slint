@@ -2,8 +2,8 @@
 // A native-feeling download library: a quiet sidebar, one unified toolbar,
 // rhythmic rows with a single detail line, and an optional detailed table.
 
-import { Button, LineEdit, SpinBox, CheckBox, ComboBox, ListView, TextEdit, Palette, ScrollView } from "std-widgets.slint";
-import { WindowInfo, ToolTip, DownloadRow, QueueRow, SegView, Cols, ColDef, CatRow, PairRow, LinkRow, Theme, ThemedWindow, CaptionButton, P, G, TypeIcon, KindTile, BigTypeIcon, TreeItem, SidebarHeading, HeaderCell, Cell, MenuPanel, MenuEntry, MenuSep, MenuLabel, Glyph, IconButton, ToolbarButton, SearchField, ProgressBar, Segment, SegmentedBar, Disclosure, Notice, EmptyState, FieldRow, QuietField, QuietButton, ListFrame } from "common.slint";
+import { SpinBox, CheckBox, ListView, TextEdit, Palette, ScrollView } from "std-widgets.slint";
+import { Button, LineEdit, ComboBox, ToolbarGroup, WindowInfo, ToolTip, DownloadRow, QueueRow, SegView, Cols, ColDef, CatRow, PairRow, LinkRow, Theme, ThemedWindow, CaptionButton, P, G, TypeIcon, KindTile, BigTypeIcon, TreeItem, SidebarHeading, HeaderCell, Cell, MenuPanel, MenuEntry, MenuSep, MenuLabel, Glyph, IconButton, ToolbarButton, SearchField, ProgressBar, Segment, SegmentedBar, Disclosure, Notice, EmptyState, FieldRow, QuietField, QuietButton, ListFrame } from "common.slint";
 export { DownloadRow, QueueRow, SegView, Cols, ColDef, CatRow, PairRow, LinkRow, Theme, WindowInfo }
 export { BrowserRow } from "dialogs.slint";
 export { ColumnsDialog, CategoryDialog, FindDialog, PropertiesDialog, DuplicateDialog, CountdownDialog, SchedulerDialog, GrabberDialog, TipDialog, RefreshDialog, SettingsDialog, PlaylistDialog, TorrentDialog, BrowserDialog, AboutDialog, UpdateDialog, WhatsNewDialog } from "dialogs.slint";
@@ -34,7 +34,7 @@ component DownloadItem inherits Rectangle {
     in property <bool> detailed;
     // Fixed pitch (drag selection measures rows by it); the visible card is
     // inset so rows stay separated and selection reads as one shape.
-    height: root.detailed ? 26px * max(1, Theme.font-scale) : 58px * max(1, Theme.font-scale);
+    height: root.detailed ? 28px * max(1, Theme.font-scale) : 62px * max(1, Theme.font-scale);
     background: transparent;
     accessible-role: list-item;
     accessible-label: root.data.name;
@@ -46,7 +46,7 @@ component DownloadItem inherits Rectangle {
         y: root.detailed ? 0px : 1px;
         width: parent.width;
         height: root.detailed ? parent.height : parent.height - 2px;
-        border-radius: root.detailed ? 0px : 8px;
+        border-radius: root.detailed ? 0px : 12px;
         background: root.selected ? Theme.select : ta.has-hover ? Theme.hover : root.detailed && root.alt ? Theme.fill : transparent;
     }
     ta := TouchArea {
@@ -315,12 +315,12 @@ component DownloadItem inherits Rectangle {
         padding-right: 10px;
         spacing: 12px;
         Rectangle {
-            width: 32px;
+            width: 36px;
             KindTile {
                 kind: root.data.kind;
                 y: (parent.height - self.height) / 2;
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
             }
         }
         VerticalLayout {
@@ -331,7 +331,7 @@ component DownloadItem inherits Rectangle {
                 text: root.data.name;
                 color: Theme.text;
                 font-size: Theme.body-size;
-                font-weight: 500;
+                font-weight: 600;
                 overflow: elide;
             }
             Text {
@@ -463,6 +463,7 @@ export component MainWindow inherits ThemedWindow {
     in property <bool> front;
     always-on-top: root.front;
     title: @tr("Mac Downloader");
+    background: Theme.panel;
     // Options > General > Background picture (shows through the panels)
     in property <image> bg-image;
     in property <bool> has-bg-image;
@@ -1118,10 +1119,21 @@ export component MainWindow inherits ThemedWindow {
         }
         HorizontalLayout {
             spacing: 0px;
+            padding-left: root.hide-categories ? 0px : 8px;
+            padding-bottom: root.hide-categories ? 0px : 8px;
+            padding-top: root.hide-categories ? 0px : 2px;
             // ---------------------------------------------------- sidebar
+            // A floating panel inset from the window edges.
             if !root.hide-categories: Rectangle {
-                width: 216px * max(1, min(1.3, Theme.font-scale));
+                width: 220px * max(1, min(1.3, Theme.font-scale));
                 background: Theme.sidebar;
+                border-radius: 16px;
+                border-width: 1px;
+                border-color: Theme.control-border;
+                drop-shadow-blur: 14px;
+                drop-shadow-offset-y: 2px;
+                drop-shadow-color: Theme.shadow.transparentize(0.45);
+                clip: true;
                 accessible-role: navigation;
                 accessible-label: @tr("Sidebar");
                 Flickable {
@@ -1161,7 +1173,6 @@ export component MainWindow inherits ThemedWindow {
                     }
                 }
             }
-            if !root.hide-categories: Rectangle { width: 1px; background: Theme.line; }
             // ---------------------------------------------------- content
             Rectangle {
                 horizontal-stretch: 1;
@@ -1170,24 +1181,25 @@ export component MainWindow inherits ThemedWindow {
                     spacing: 0px;
                     // One unified toolbar: where you are, what is happening, and the actions.
                     Rectangle {
-                        height: max(52px, toolbar.preferred-height);
-                        background: Theme.sidebar;
+                        height: max(56px, toolbar.preferred-height);
+                        background: transparent;
                         accessible-role: groupbox;
                         accessible-label: @tr("Toolbar");
                         toolbar := HorizontalLayout {
-                            padding-left: 12px;
+                            padding-left: 14px;
                             padding-right: 14px;
-                            padding-top: 8px;
-                            padding-bottom: 8px;
-                            spacing: 6px;
+                            padding-top: 10px;
+                            padding-bottom: 10px;
+                            spacing: 8px;
                             alignment: stretch;
                             VerticalLayout {
                                 alignment: center;
-                                IconButton {
-                                    glyph: "sidebar";
-                                    tint: Theme.muted;
-                                    label: root.hide-categories ? @tr("Show Sidebar") : @tr("Hide Sidebar");
-                                    clicked => { root.toggle-categories(); }
+                                ToolbarGroup {
+                                    IconButton {
+                                        glyph: "sidebar";
+                                        label: root.hide-categories ? @tr("Show Sidebar") : @tr("Hide Sidebar");
+                                        clicked => { root.toggle-categories(); }
+                                    }
                                 }
                             }
                             VerticalLayout {
@@ -1241,8 +1253,7 @@ export component MainWindow inherits ThemedWindow {
                             Rectangle { width: 4px; }
                             VerticalLayout {
                                 alignment: center;
-                                HorizontalLayout {
-                                    spacing: 2px;
+                                ToolbarGroup {
                                     IconButton { glyph: "play"; glyph-size: 13px; label: @tr("Resume"); enabled: root.can-resume; clicked => { root.resume(root.selected-id); } }
                                     IconButton { glyph: "pause"; glyph-size: 13px; label: @tr("Pause"); enabled: root.can-stop; clicked => { root.pause(root.selected-id); } }
                                     IconButton { glyph: "reveal"; label: (Theme.native-macos ? @tr("Show in Finder") : @tr("Show in folder")); enabled: root.selected-id >= 0; clicked => { root.row-action(root.selected-id, "folder"); } }
@@ -1267,11 +1278,12 @@ export component MainWindow inherits ThemedWindow {
                             }
                             VerticalLayout {
                                 alignment: center;
-                                IconButton { glyph: "more"; label: @tr("More Actions"); clicked => { more-menu.show(); } }
+                                ToolbarGroup {
+                                    IconButton { glyph: "more"; label: @tr("More Actions"); clicked => { more-menu.show(); } }
+                                }
                             }
                         }
                     }
-                    Rectangle { height: 1px; background: Theme.line; }
                     Rectangle {
                         vertical-stretch: 1;
                         min-width: 0px;
@@ -1279,9 +1291,9 @@ export component MainWindow inherits ThemedWindow {
                         background: Theme.panel;
                         accessible-role: main;
                         VerticalLayout {
-                            padding-left: root.detailed-list ? 0px : 8px;
-                            padding-right: root.detailed-list ? 0px : 8px;
-                            padding-top: root.detailed-list ? 0px : 6px;
+                            padding-left: root.detailed-list ? 0px : 10px;
+                            padding-right: root.detailed-list ? 0px : 12px;
+                            padding-top: root.detailed-list ? 0px : 2px;
                             if root.detailed-list: Rectangle {
                                 height: 28px * max(1, Theme.font-scale);
                                 background: Theme.panel;

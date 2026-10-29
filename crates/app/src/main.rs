@@ -2051,7 +2051,7 @@ fn set_theme_of(t: Theme<'_>, look: &Look) {
 /// Show `look` on every window right away.
 pub(crate) fn apply_look(ui: &Ui, look: &Look) {
     CURRENT_LOOK.with(|slot| *slot.borrow_mut() = Some(look.clone()));
-    winfx::set_chrome_color(appearance::palette(look.mode).sidebar);
+    winfx::set_chrome_color(appearance::palette(look.mode).panel);
     macro_rules! set {
         ($($w:expr),*) => { $( if let Some(w) = $w.upgrade() { set_theme_of(w.global::<Theme>(), look); } )* };
     }

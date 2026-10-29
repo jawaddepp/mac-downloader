@@ -4,8 +4,8 @@
 // download address, torrents, playlists, browser setup, About and updates.
 // Every window uses the shared design system in common.slint.
 
-import { Button, LineEdit, SpinBox, CheckBox, ComboBox, ListView, TextEdit, ScrollView, AboutSlint, Slider, Switch } from "std-widgets.slint";
-import { Cols, PairRow, LinkRow, QueueRow, DownloadRow, Theme, ThemedWindow, TypeIcon, KindTile, BigTypeIcon, BrandMark, HeaderCell, Cell, Glyph, Segment, SegmentedBar, Disclosure, Notice, FormSection, FormRow, FormStackRow, FieldRow, CheckMark, ListFrame, IconButton } from "common.slint";
+import { SpinBox, CheckBox, ListView, TextEdit, ScrollView, AboutSlint, Slider, Switch } from "std-widgets.slint";
+import { Button, LineEdit, ComboBox, Cols, PairRow, LinkRow, QueueRow, DownloadRow, Theme, ThemedWindow, TypeIcon, KindTile, BigTypeIcon, BrandMark, HeaderCell, Cell, Glyph, Segment, SegmentedBar, Disclosure, Notice, FormSection, FormRow, FormStackRow, FieldRow, CheckMark, ListFrame, IconButton } from "common.slint";
 
 // ------------------------------------------------------------------ small parts
 
@@ -28,20 +28,20 @@ component DialogHeader inherits HorizontalLayout {
     in property <string> kind;
     in property <string> glyph;
     in property <color> tint: Theme.accent;
-    spacing: 12px;
+    spacing: 14px;
     if root.kind != "": Rectangle {
-        width: 40px;
-        KindTile { kind: root.kind; y: (parent.height - self.height) / 2; width: 40px; height: 40px; }
+        width: 46px;
+        KindTile { kind: root.kind; y: (parent.height - self.height) / 2; width: 46px; height: 46px; }
     }
     if root.kind == "" && root.glyph != "": Rectangle {
-        width: 40px;
+        width: 46px;
         Rectangle {
             y: (parent.height - self.height) / 2;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
             background: root.tint;
-            Glyph { x: 10px; y: 10px; width: 20px; height: 20px; kind: root.glyph; tint: Theme.on-accent; }
+            Glyph { x: 12px; y: 12px; width: 22px; height: 22px; kind: root.glyph; tint: Theme.on-accent; }
         }
     }
     VerticalLayout {
@@ -50,8 +50,8 @@ component DialogHeader inherits HorizontalLayout {
         horizontal-stretch: 1;
         Text {
             text: root.title;
-            font-size: Theme.title2-size;
-            font-weight: 600;
+            font-size: 19px * Theme.font-scale;
+            font-weight: 700;
             color: Theme.text;
             wrap: word-wrap;
         }
@@ -135,8 +135,8 @@ component SideTab inherits Rectangle {
     in property <color> tint: #73737a;
     in property <bool> active;
     callback clicked();
-    height: max(28px, label.preferred-height + 10px);
-    border-radius: 6px;
+    height: max(32px, label.preferred-height + 12px);
+    border-radius: 9px;
     accessible-role: tab;
     accessible-label: root.text;
     accessible-item-selected: root.active;
@@ -1388,9 +1388,18 @@ export component SettingsDialog inherits ThemedWindow {
         }
     HorizontalLayout {
         spacing: 0px;
+        padding-left: 8px;
+        padding-bottom: 8px;
+        padding-top: 2px;
         Rectangle {
-            width: 196px * min(1.25, Theme.font-scale);
+            width: 204px * min(1.25, Theme.font-scale);
             background: Theme.sidebar;
+            border-radius: 16px;
+            border-width: 1px;
+            border-color: Theme.control-border;
+            drop-shadow-blur: 14px;
+            drop-shadow-offset-y: 2px;
+            drop-shadow-color: Theme.shadow.transparentize(0.45);
             accessible-role: tab-list;
             accessible-label: @tr("Settings");
             VerticalLayout {
@@ -1406,7 +1415,6 @@ export component SettingsDialog inherits ThemedWindow {
                 }
             }
         }
-        Rectangle { width: 1px; background: Theme.line; }
         VerticalLayout {
             horizontal-stretch: 1;
             spacing: 0px;
@@ -1968,13 +1976,12 @@ export component SettingsDialog inherits ThemedWindow {
                     }
                 }
             }
-            Rectangle { height: 1px; background: Theme.line; }
             HorizontalLayout {
                 padding-left: 24px;
-                padding-right: 16px;
-                padding-top: 12px;
-                padding-bottom: 12px;
-                spacing: 8px;
+                padding-right: 20px;
+                padding-top: 10px;
+                padding-bottom: 6px;
+                spacing: 10px;
                 Text {
                     text: root.message;
                     color: Theme.err;
@@ -2638,7 +2645,7 @@ export component AboutDialog inherits ThemedWindow {
             Button {
                 text: @tr("Support with PayPal");
                 clicked => {
-                    root.open-link("https://www.paypal.com/paypalme/ahmedezzat99");
+                    root.open-link("https://www.paypal.me/ibrahimalmaroof");
                 }
             }
         }
@@ -2665,102 +2672,154 @@ export component WhatsNewDialog inherits ThemedWindow {
     in property <bool> front;
     always-on-top: root.front;
     title: @tr("What's new in Mac Downloader");
-    preferred-width: 540px;
-    preferred-height: 540px;
+    preferred-width: 520px;
+    preferred-height: 600px;
     min-width: 440px;
-    min-height: 360px;
+    min-height: 420px;
     in property <string> heading;
     in property <[string]> items;
     in property <bool> rtl;
     callback open-link(string);
     callback close-window();
     property <TextHorizontalAlignment> side: root.rtl ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+    property <[{glyph: string, kind: string}]> marks: [
+        { glyph: "sparkles", kind: "doc" },
+        { glyph: "progress", kind: "torrent" },
+        { glyph: "plus", kind: "archive" },
+        { glyph: "settings", kind: "general" },
+        { glyph: "appearance", kind: "exe" },
+        { glyph: "puzzle", kind: "audio" },
+    ];
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape || event.text == Key.Return) { root.close-window(); return accept; }
+            reject
+        }
     VerticalLayout {
-        padding: 20px;
-        spacing: 14px;
-        HorizontalLayout {
-            spacing: 12px;
-            alignment: root.rtl ? end : start;
-            if !root.rtl: Image {
-                source: @image-url("icon.png");
-                width: 44px;
-                height: 44px;
+        padding-left: 36px;
+        padding-right: 36px;
+        padding-top: 30px;
+        padding-bottom: 24px;
+        spacing: 22px;
+        VerticalLayout {
+            vertical-stretch: 0;
+            spacing: 8px;
+            HorizontalLayout {
+                alignment: center;
+                Image {
+                    source: @image-url("icon.png");
+                    width: 76px;
+                    height: 76px;
+                    accessible-role: image;
+                    accessible-label: "Mac Downloader";
+                }
+            }
+            Rectangle { height: 4px; }
+            Text {
+                text: @tr("What's New");
+                horizontal-alignment: center;
+                font-size: 26px * Theme.font-scale;
+                font-weight: 700;
+                color: Theme.text;
             }
             Text {
                 text: root.heading;
-                font-size: Theme.title3-size;
-                font-weight: 600;
-                color: Theme.text;
-                vertical-alignment: center;
-                horizontal-alignment: root.side;
+                horizontal-alignment: center;
+                font-size: Theme.body-size;
+                color: Theme.muted;
                 wrap: word-wrap;
-                horizontal-stretch: 1;
-            }
-            if root.rtl: Image {
-                source: @image-url("icon.png");
-                width: 44px;
-                height: 44px;
             }
         }
-        ListFrame {
+        ScrollView {
             vertical-stretch: 1;
-            ScrollView {
-                VerticalLayout {
-                    padding: 14px;
-                    spacing: 10px;
-                    alignment: start;
-                    for line in root.items: HorizontalLayout {
-                        spacing: 8px;
-                        if !root.rtl: Text {
-                            text: "•";
-                            color: Theme.accent-text;
-                            font-weight: 700;
+            horizontal-scrollbar-policy: ScrollBarPolicy.always-off;
+            content-width: self.visible-width;
+            content-height: features.preferred-height;
+            features := VerticalLayout {
+                width: parent.width;
+                height: self.preferred-height;
+                alignment: start;
+                spacing: 18px;
+                padding-right: 8px;
+                for line[i] in root.items: HorizontalLayout {
+                    spacing: 16px;
+                    if !root.rtl: Rectangle {
+                        width: 38px;
+                        Rectangle {
+                            y: 0px;
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 11px;
+                            background: Theme.tint(root.marks[Math.mod(i, root.marks.length)].kind);
+                            Glyph { x: 10px; y: 10px; width: 18px; height: 18px; kind: root.marks[Math.mod(i, root.marks.length)].glyph; tint: Theme.on-accent; }
                         }
-                        Text {
-                            text: line;
-                            color: Theme.text;
-                            wrap: word-wrap;
-                            horizontal-alignment: root.side;
-                            horizontal-stretch: 1;
-                        }
-                        if root.rtl: Text {
-                            text: "•";
-                            color: Theme.accent-text;
-                            font-weight: 700;
+                    }
+                    Text {
+                        text: line;
+                        color: Theme.text;
+                        font-size: Theme.body-size;
+                        wrap: word-wrap;
+                        vertical-alignment: center;
+                        horizontal-alignment: root.side;
+                        horizontal-stretch: 1;
+                    }
+                    if root.rtl: Rectangle {
+                        width: 38px;
+                        Rectangle {
+                            y: 0px;
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 11px;
+                            background: Theme.tint(root.marks[Math.mod(i, root.marks.length)].kind);
+                            Glyph { x: 10px; y: 10px; width: 18px; height: 18px; kind: root.marks[Math.mod(i, root.marks.length)].glyph; tint: Theme.on-accent; }
                         }
                     }
                 }
             }
         }
-        // the program is free: a way to say thank you
-        HorizontalLayout {
+        VerticalLayout {
+            vertical-stretch: 0;
             spacing: 12px;
-            Text {
-                text: @tr("Mac Downloader is free and has no ads. If it helps you and you would like to support its development, you can send a gift with PayPal. Thank you!");
-                color: Theme.muted;
-                font-size: Theme.footnote-size;
-                wrap: word-wrap;
-                horizontal-alignment: root.side;
-                horizontal-stretch: 1;
-            }
-        }
-        HorizontalLayout {
-            spacing: 8px;
-            alignment: root.rtl ? start : end;
-            Button {
-                text: @tr("Support with PayPal");
-                clicked => {
-                    root.open-link("https://www.paypal.com/paypalme/ahmedezzat99");
+            HorizontalLayout {
+                alignment: center;
+                Button {
+                    min-width: 240px;
+                    text: @tr("Continue");
+                    primary: true;
+                    clicked => { root.close-window(); }
                 }
             }
-            Button {
-                text: @tr("OK");
-                primary: true;
-                clicked => {
-                    root.close-window();
+            HorizontalLayout {
+                alignment: center;
+                spacing: 4px;
+                Text {
+                    text: @tr("Mac Downloader is free and has no ads.");
+                    color: Theme.muted;
+                    font-size: Theme.footnote-size;
+                    vertical-alignment: center;
+                }
+                support := Rectangle {
+                    min-width: support-label.preferred-width + 8px;
+                    height: support-label.preferred-height + 4px;
+                    accessible-role: button;
+                    accessible-label: @tr("Support with PayPal");
+                    accessible-action-default => { root.open-link("https://www.paypal.me/ibrahimalmaroof"); }
+                    support-label := Text {
+                        x: 4px;
+                        text: @tr("Support with PayPal");
+                        color: Theme.accent-text;
+                        font-size: Theme.footnote-size;
+                        font-weight: 500;
+                        vertical-alignment: center;
+                    }
+                    TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => { root.open-link("https://www.paypal.me/ibrahimalmaroof"); }
+                    }
                 }
             }
         }
+    }
     }
 }
 

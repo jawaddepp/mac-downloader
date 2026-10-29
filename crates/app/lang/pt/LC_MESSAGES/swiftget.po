@@ -1444,5 +1444,11 @@ msgstr "Apoiar com PayPal"
 msgid "What's new in Mac Downloader"
 msgstr "Novidades do Mac Downloader"
 
-msgid "Mac Downloader is free and has no ads. If it helps you and you would like to support its development, you can send a gift with PayPal. Thank you!"
-msgstr "O Mac Downloader é gratuito e sem anúncios. Se ele te ajuda e você quer apoiar o desenvolvimento, pode enviar uma contribuição pelo PayPal. Obrigado!"
+msgid "What's New"
+msgstr "Novidades"
+
+msgid "Continue"
+msgstr "Continuar"
+
+msgid "Mac Downloader is free and has no ads."
+msgstr "O Mac Downloader é gratuito e sem anúncios."

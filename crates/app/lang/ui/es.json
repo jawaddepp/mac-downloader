@@ -555,5 +555,8 @@
  "{} left": "quedan {}",
  "{} of {}": "{} de {}",
  "{} selected": "{} seleccionados",
- "automatic (Downloads/{})": "automático (Descargas/{})"
+ "automatic (Downloads/{})": "automático (Descargas/{})",
+ "What's New": "Novedades",
+ "Continue": "Continuar",
+ "Mac Downloader is free and has no ads.": "Mac Downloader es gratuito y sin anuncios."
 }
