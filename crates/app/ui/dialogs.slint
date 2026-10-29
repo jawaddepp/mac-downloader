@@ -4,8 +4,8 @@
 // download address, torrents, playlists, browser setup, About and updates.
 // Every window uses the shared design system in common.slint.
 
-import { SpinBox, CheckBox, ListView, TextEdit, ScrollView, AboutSlint, Slider, Switch } from "std-widgets.slint";
-import { Button, LineEdit, ComboBox, Cols, PairRow, LinkRow, QueueRow, DownloadRow, Theme, ThemedWindow, TypeIcon, KindTile, BigTypeIcon, BrandMark, HeaderCell, Cell, Glyph, Segment, SegmentedBar, Disclosure, Notice, FormSection, FormRow, FormStackRow, FieldRow, CheckMark, ListFrame, IconButton } from "common.slint";
+import { CheckBox, ListView, TextEdit, ScrollView, AboutSlint, Slider, Switch } from "std-widgets.slint";
+import { Button, LineEdit, ComboBox, SpinBox, Cols, PairRow, LinkRow, QueueRow, DownloadRow, Theme, ThemedWindow, TypeIcon, KindTile, BigTypeIcon, BrandMark, HeaderCell, Cell, Glyph, Segment, SegmentedBar, Disclosure, Notice, FormSection, FormRow, FormStackRow, FieldRow, CheckMark, ListFrame, IconButton } from "common.slint";
 
 // ------------------------------------------------------------------ small parts
 
@@ -89,7 +89,6 @@ component Radio inherits Rectangle {
     ta := TouchArea {
         enabled: root.enabled;
         clicked => {
-            focus.focus();
             root.clicked();
         }
     }
@@ -151,7 +150,6 @@ component SideTab inherits Rectangle {
     background: root.active ? Theme.select : ta.has-hover ? Theme.hover : transparent;
     ta := TouchArea {
         clicked => {
-            keyboard.focus();
             root.clicked();
         }
     }
@@ -2696,8 +2694,8 @@ export component WhatsNewDialog inherits ThemedWindow {
             reject
         }
     VerticalLayout {
-        padding-left: 36px;
-        padding-right: 36px;
+        padding-left: 30px;
+        padding-right: 30px;
         padding-top: 30px;
         padding-bottom: 24px;
         spacing: 22px;
@@ -2740,7 +2738,11 @@ export component WhatsNewDialog inherits ThemedWindow {
                 height: self.preferred-height;
                 alignment: start;
                 spacing: 18px;
-                padding-right: 8px;
+                // inset so the scroll area never clips the rounded icon tiles
+                padding-left: 6px;
+                padding-right: 10px;
+                padding-top: 2px;
+                padding-bottom: 2px;
                 for line[i] in root.items: HorizontalLayout {
                     spacing: 16px;
                     if !root.rtl: Rectangle {

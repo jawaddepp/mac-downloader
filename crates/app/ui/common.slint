@@ -239,8 +239,21 @@ export component Glyph inherits Rectangle {
     in property <color> tint: Theme.text;
     width: 16px;
     height: 16px;
-    property <bool> solid: root.kind == "play" || root.kind == "pause" || root.kind == "stop" || root.kind == "more";
-    property <string> path: root.kind == "play" ? "M 5.1 2.9 Q 4.4 2.5 4.4 3.4 L 4.4 12.6 Q 4.4 13.5 5.1 13.1 L 12.5 8.7 Q 13.3 8 12.5 7.3 Z"
+    property <bool> solid: root.kind == "play" || root.kind == "pause" || root.kind == "stop" || root.kind == "more"
+        || root.kind == "f-archive" || root.kind == "f-doc" || root.kind == "f-music" || root.kind == "f-apps"
+        || root.kind == "f-video" || root.kind == "f-image" || root.kind == "f-general" || root.kind == "f-disc" || root.kind == "f-folder";
+    // filled symbols with cut-outs (slots, lines, holes) use even-odd filling
+    property <bool> cutouts: root.kind == "f-archive" || root.kind == "f-doc" || root.kind == "f-disc";
+    property <string> path: root.kind == "f-archive" ? "M 2 3.6 Q 2 2.4 3.2 2.4 L 12.8 2.4 Q 14 2.4 14 3.6 L 14 4.8 Q 14 5.8 13 5.8 L 3 5.8 Q 2 5.8 2 4.8 Z M 2.9 6.8 L 13.1 6.8 L 13.1 12.4 Q 13.1 13.6 11.9 13.6 L 4.1 13.6 Q 2.9 13.6 2.9 12.4 Z M 6.3 8.3 L 9.7 8.3 Q 10.4 8.3 10.4 9 Q 10.4 9.7 9.7 9.7 L 6.3 9.7 Q 5.6 9.7 5.6 9 Q 5.6 8.3 6.3 8.3 Z"
+        : root.kind == "f-doc" ? "M 4.6 1.6 L 9.6 1.6 L 13 5 L 13 13.2 Q 13 14.4 11.8 14.4 L 4.6 14.4 Q 3.2 14.4 3.2 13.2 L 3.2 2.8 Q 3.2 1.6 4.6 1.6 Z M 5.4 7.6 L 10.8 7.6 L 10.8 8.8 L 5.4 8.8 Z M 5.4 10.4 L 10.8 10.4 L 10.8 11.6 L 5.4 11.6 Z"
+        : root.kind == "f-general" ? "M 4.6 1.6 L 9.6 1.6 L 13 5 L 13 13.2 Q 13 14.4 11.8 14.4 L 4.6 14.4 Q 3.2 14.4 3.2 13.2 L 3.2 2.8 Q 3.2 1.6 4.6 1.6 Z"
+        : root.kind == "f-music" ? "M 7.4 11.6 A 2.4 2 0 1 1 2.6 11.6 A 2.4 2 0 1 1 7.4 11.6 Z M 6.1 11.4 L 6.1 2.4 L 7.6 1.8 L 7.6 11.4 Z M 7.6 1.8 Q 12.6 3.2 13 7.8 Q 11 5.4 7.6 5.6 Z"
+        : root.kind == "f-apps" ? "M 2.2 3.4 Q 2.2 2.2 3.4 2.2 L 6.2 2.2 Q 7.4 2.2 7.4 3.4 L 7.4 6.2 Q 7.4 7.4 6.2 7.4 L 3.4 7.4 Q 2.2 7.4 2.2 6.2 Z M 8.6 3.4 Q 8.6 2.2 9.8 2.2 L 12.6 2.2 Q 13.8 2.2 13.8 3.4 L 13.8 6.2 Q 13.8 7.4 12.6 7.4 L 9.8 7.4 Q 8.6 7.4 8.6 6.2 Z M 2.2 9.8 Q 2.2 8.6 3.4 8.6 L 6.2 8.6 Q 7.4 8.6 7.4 9.8 L 7.4 12.6 Q 7.4 13.8 6.2 13.8 L 3.4 13.8 Q 2.2 13.8 2.2 12.6 Z M 8.6 9.8 Q 8.6 8.6 9.8 8.6 L 12.6 8.6 Q 13.8 8.6 13.8 9.8 L 13.8 12.6 Q 13.8 13.8 12.6 13.8 L 9.8 13.8 Q 8.6 13.8 8.6 12.6 Z"
+        : root.kind == "f-video" ? "M 1.6 5 Q 1.6 3.6 3 3.6 L 9.4 3.6 Q 10.8 3.6 10.8 5 L 10.8 11 Q 10.8 12.4 9.4 12.4 L 3 12.4 Q 1.6 12.4 1.6 11 Z M 11.6 6.6 L 14.4 4.8 L 14.4 11.2 L 11.6 9.4 Z"
+        : root.kind == "f-image" ? "M 1.6 13 L 5.6 7.2 L 8.6 10.8 L 10.6 8.6 L 14.4 13 Z M 12.4 4.8 A 1.7 1.7 0 1 1 9 4.8 A 1.7 1.7 0 1 1 12.4 4.8 Z"
+        : root.kind == "f-disc" ? "M 8 1.6 A 6.4 6.4 0 1 1 7.99 1.6 Z M 8 6.3 A 1.7 1.7 0 1 0 8.01 6.3 Z"
+        : root.kind == "f-folder" ? "M 1.8 4.2 Q 1.8 2.9 3.1 2.9 L 6.2 2.9 L 7.9 4.6 L 12.9 4.6 Q 14.2 4.6 14.2 5.9 L 14.2 11.9 Q 14.2 13.2 12.9 13.2 L 3.1 13.2 Q 1.8 13.2 1.8 11.9 Z"
+        : root.kind == "play" ? "M 5.1 2.9 Q 4.4 2.5 4.4 3.4 L 4.4 12.6 Q 4.4 13.5 5.1 13.1 L 12.5 8.7 Q 13.3 8 12.5 7.3 Z"
         : root.kind == "progress" ? "M 8 1.8 A 6.2 6.2 0 1 1 7.99 1.8 Z M 8 4.5 L 8 8 L 11 9.5"
         : root.kind == "openwith" ? "M 2.5 5 L 2.5 13.5 L 11 13.5 L 11 10 M 7 9 L 13.5 2.5 M 9 2.5 L 13.5 2.5 L 13.5 7"
         : root.kind == "folder" ? "M 2 5.5 L 2 4 Q 2 3 3 3 L 6 3 L 7.7 4.8 L 13 4.8 Q 14 4.8 14 5.8 L 14 12 Q 14 13 13 13 L 3 13 Q 2 13 2 12 Z M 2.3 6.4 L 13.7 6.4"
@@ -315,6 +328,7 @@ export component Glyph inherits Rectangle {
         viewbox-width: 16;
         viewbox-height: 16;
         stroke-width: root.solid ? 0px : max(1.25px, 1.5px * self.width / 16px);
+        fill-rule: root.cutouts ? FillRule.evenodd : FillRule.nonzero;
         stroke-line-cap: round;
         stroke-line-join: round;
         stroke: root.tint;
@@ -352,13 +366,22 @@ export component KindTile inherits Rectangle {
     height: 32px;
     border-radius: self.width * 0.24;
     background: root.tile-color;
-    TypeIcon {
+    Glyph {
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
-        width: parent.width * 0.6;
-        height: parent.height * 0.6;
-        kind: root.kind;
+        width: parent.width * 0.64;
+        height: parent.height * 0.64;
         tint: Theme.on-accent;
+        kind: root.kind == "archive" ? "f-archive"
+            : root.kind == "audio" || root.kind == "music" ? "f-music"
+            : root.kind == "exe" || root.kind == "apk" || root.kind == "program" ? "f-apps"
+            : root.kind == "video" ? "f-video"
+            : root.kind == "image" ? "f-image"
+            : root.kind == "disc" ? "f-disc"
+            : root.kind == "folder" ? "f-folder"
+            : root.kind == "torrent" ? "torrent"
+            : root.kind == "pdf" || root.kind == "doc" || root.kind == "text" || root.kind == "sheet" || root.kind == "slides" ? "f-doc"
+            : "f-general";
     }
 }
 
@@ -452,7 +475,7 @@ export component IconButton inherits Rectangle {
     }
     hit := TouchArea {
         enabled: root.enabled;
-        clicked => { focus.focus(); root.clicked(); }
+        clicked => { root.clicked(); }
         changed has-hover => {
             if (!root.tooltip) { return; }
             if (self.has-hover) {
@@ -552,7 +575,7 @@ export component ToolbarButton inherits Rectangle {
             color: root.primary ? Theme.on-accent : Theme.text;
         }
     }
-    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); root.clicked(); } }
+    hit := TouchArea { enabled: root.enabled; clicked => { root.clicked(); } }
     if focus.has-focus: Rectangle {
         x: -2px; y: -2px;
         width: parent.width + 4px;
@@ -690,7 +713,7 @@ export component Segment inherits Rectangle {
         color: Theme.text;
         overflow: elide;
     }
-    hit := TouchArea { clicked => { focus.focus(); root.clicked(); } }
+    hit := TouchArea { clicked => { root.clicked(); } }
     if focus.has-focus: Rectangle {
         border-radius: parent.border-radius;
         border-width: 2px;
@@ -748,7 +771,7 @@ export component Disclosure inherits Rectangle {
         font-size: Theme.body-size;
         color: Theme.text;
     }
-    hit := TouchArea { clicked => { focus.focus(); root.expanded = !root.expanded; root.toggled(root.expanded); } }
+    hit := TouchArea { clicked => { root.expanded = !root.expanded; root.toggled(root.expanded); } }
     if focus.has-focus: Rectangle {
         border-radius: parent.border-radius;
         border-width: 2px;
@@ -822,7 +845,8 @@ export component FormRow inherits Rectangle {
     // the first row of a section has no separator above it
     in property <bool> first;
     in property <bool> enabled: true;
-    min-height: 44px * min(1.3, Theme.font-scale);
+    min-height: max(44px * min(1.3, Theme.font-scale), row.preferred-height);
+    preferred-height: self.min-height;
     if !root.first: Rectangle {
         x: 14px;
         y: 0px;
@@ -830,7 +854,7 @@ export component FormRow inherits Rectangle {
         height: 1px;
         background: Theme.grid;
     }
-    HorizontalLayout {
+    row := HorizontalLayout {
         padding-left: 14px;
         padding-right: 12px;
         padding-top: 8px;
@@ -871,6 +895,8 @@ export component FormStackRow inherits Rectangle {
     in property <string> hint;
     in property <bool> first;
     in property <bool> enabled: true;
+    min-height: stack.preferred-height;
+    preferred-height: stack.preferred-height;
     if !root.first: Rectangle {
         x: 14px;
         y: 0px;
@@ -878,7 +904,7 @@ export component FormStackRow inherits Rectangle {
         height: 1px;
         background: Theme.grid;
     }
-    VerticalLayout {
+    stack := VerticalLayout {
         padding-left: 14px;
         padding-right: 12px;
         padding-top: 10px;
@@ -1382,7 +1408,6 @@ export component MenuEntry inherits Rectangle {
         height: parent.height;
         enabled: root.enabled;
         clicked => {
-            keyboard.focus();
             root.clicked();
         }
     }
@@ -1489,7 +1514,7 @@ export component Button inherits Rectangle {
         color: root.primary ? Theme.on-accent : root.destructive ? Theme.err : Theme.text;
         overflow: elide;
     }
-    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); root.clicked(); } }
+    hit := TouchArea { enabled: root.enabled; clicked => { root.clicked(); } }
     if focus.has-focus: Rectangle {
         x: -3px; y: -3px;
         width: parent.width + 6px;
@@ -1554,7 +1579,7 @@ export component ComboBox inherits Rectangle {
         kind: "chevrons";
         tint: Theme.muted;
     }
-    hit := TouchArea { enabled: root.enabled; clicked => { focus.focus(); list.show(); } }
+    hit := TouchArea { enabled: root.enabled; clicked => { list.show(); } }
     if focus.has-focus: Rectangle {
         x: -3px; y: -3px;
         width: parent.width + 6px;
@@ -1590,3 +1615,87 @@ export component ComboBox inherits Rectangle {
     }
 }
 
+
+// A number field with a compact stepper (replaces the standard SpinBox).
+export component SpinBox inherits Rectangle {
+    in property <int> minimum: 0;
+    in property <int> maximum: 100;
+    in property <int> step-size: 1;
+    in-out property <int> value;
+    in property <bool> enabled: true;
+    callback edited(int);
+    min-height: 28px * min(1.3, Theme.font-scale);
+    max-height: 28px * min(1.3, Theme.font-scale);
+    min-width: 76px;
+    preferred-width: 96px;
+    horizontal-stretch: 0;
+    border-radius: 8px;
+    background: Theme.input-bg;
+    border-width: editor.has-focus ? 3px : 1px;
+    border-color: editor.has-focus ? Theme.focus-ring : Theme.control-border;
+    opacity: root.enabled ? 1 : 0.45;
+    forward-focus: editor;
+    accessible-role: spinbox;
+    accessible-value: root.value;
+    accessible-value-minimum: root.minimum;
+    accessible-value-maximum: root.maximum;
+    accessible-value-step: root.step-size;
+    accessible-enabled: root.enabled;
+    accessible-action-increment => { root.step(1); }
+    accessible-action-decrement => { root.step(-1); }
+    function commit(v: int) {
+        root.value = max(root.minimum, min(root.maximum, v));
+        editor.text = root.value;
+        root.edited(root.value);
+    }
+    function step(direction: int) {
+        if (root.enabled) { root.commit(root.value + direction * root.step-size); }
+    }
+    changed value => { if (!editor.has-focus) { editor.text = root.value; } }
+    editor := TextInput {
+        x: 9px;
+        width: parent.width - 36px;
+        height: parent.height;
+        vertical-alignment: center;
+        single-line: true;
+        enabled: root.enabled;
+        accessible-role: none;
+        text: root.value;
+        font-size: Theme.body-size;
+        color: Theme.text;
+        selection-background-color: Theme.accent.transparentize(0.55);
+        selection-foreground-color: Theme.text;
+        edited => {
+            if (self.text.is-float()) {
+                root.value = max(root.minimum, min(root.maximum, round(self.text.to-float())));
+                root.edited(root.value);
+            }
+        }
+        accepted => { root.commit(root.value); }
+        changed has-focus => { if (!self.has-focus) { self.text = root.value; } }
+    }
+    // the stepper: a quiet capsule with up and down halves
+    Rectangle {
+        x: parent.width - 24px;
+        y: 3px;
+        width: 20px;
+        height: parent.height - 6px;
+        border-radius: 6px;
+        background: Theme.fill;
+        Rectangle {
+            height: parent.height / 2;
+            border-radius: 6px;
+            background: up.pressed ? Theme.pressed : up.has-hover ? Theme.hover : transparent;
+            Glyph { x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2 + 1px; width: 10px; height: 10px; kind: "caret-up"; tint: Theme.muted; }
+            up := TouchArea { enabled: root.enabled; clicked => { root.step(1); } }
+        }
+        Rectangle {
+            y: parent.height / 2;
+            height: parent.height / 2;
+            border-radius: 6px;
+            background: down.pressed ? Theme.pressed : down.has-hover ? Theme.hover : transparent;
+            Glyph { x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2 - 1px; width: 10px; height: 10px; kind: "caret-down"; tint: Theme.muted; }
+            down := TouchArea { enabled: root.enabled; clicked => { root.step(-1); } }
+        }
+    }
+}
