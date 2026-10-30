@@ -6,7 +6,7 @@
 
 برنامج سطح مكتب لنظامي ويندوز وmacOS، مكتوب بلغة Rust
 
-تطوير **Ahmed Ezzat**
+تطوير **jawad depp**
 
 ![Windows](https://img.shields.io/badge/Windows-10%20%2C%2011-0078D6?style=flat-square&logo=windows11&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-000000?style=flat-square&logo=apple&logoColor=white)
@@ -164,13 +164,15 @@ rustup target add aarch64-apple-darwin
 
 ## 👨‍💻 المطوّر
 
-**Ahmed Ezzat** — Ezoo Tech
+**jawad depp**
+
+مبني على برنامج **Ezoo Download** من تطوير Ahmed Ezzat ([المشروع الأصلي](https://github.com/AhmedEzo686/ezoo-download)).
 
 ---
 
 ## © حقوق الملكية
 
-© 2026 **Ahmed Ezzat** — جميع الحقوق محفوظة.
+© 2026 **jawad depp** — جميع الحقوق محفوظة.
 
 يستخدم البرنامج مكونات مفتوحة المصدر، وتراخيصها موجودة في ملف `THIRD-PARTY-NOTICES.txt`.
 

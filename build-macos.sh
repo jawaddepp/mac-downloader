@@ -122,7 +122,7 @@ cat > "$app/Contents/Info.plist" <<EOF
     <key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
     <key>LSFileQuarantineEnabled</key><true/>
     <key>NSAppleEventsUsageDescription</key><string>Mac Downloader uses System Events when you choose to shut down your Mac after downloads finish.</string>
-    <key>NSHumanReadableCopyright</key><string>Copyright © 2026 Ahmed Ezzat</string>
+    <key>NSHumanReadableCopyright</key><string>Copyright © 2026 jawad depp</string>
 </dict></plist>
 EOF
 plutil -lint "$app/Contents/Info.plist"

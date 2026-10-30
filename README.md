@@ -174,10 +174,10 @@ releases.
 
 ## Credits
 
-Mac Downloader is based on **Ezoo Download** by **Ahmed Ezzat**
+Mac Downloader is developed by **jawad depp**. It is based on
+**Ezoo Download** by Ahmed Ezzat
 ([original project](https://github.com/AhmedEzo686/ezoo-download)).
-The interface was redesigned for macOS in version 1.1.0.
 
-Copyright © 2026 Ahmed Ezzat. Open-source components and their licenses are
+Copyright © 2026 jawad depp. Open-source components and their licenses are
 listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt). Respect the
 rights and terms of use of any content you download.

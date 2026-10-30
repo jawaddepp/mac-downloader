@@ -1435,8 +1435,8 @@ msgstr "Listo"
 msgid "Version {}"
 msgstr "Versión {}"
 
-msgid "Coded by Ahmed Ezzat"
-msgstr "Programado por Ahmed Ezzat"
+msgid "Coded by jawad depp"
+msgstr "Programado por jawad depp"
 
 msgid "Support with PayPal"
 msgstr "Apoyar con PayPal"

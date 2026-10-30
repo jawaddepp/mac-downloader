@@ -1435,8 +1435,8 @@ msgstr "Bitti"
 msgid "Version {}"
 msgstr "Sürüm {}"
 
-msgid "Coded by Ahmed Ezzat"
-msgstr "Kodlayan: Ahmed Ezzat"
+msgid "Coded by jawad depp"
+msgstr "Kodlayan: jawad depp"
 
 msgid "Support with PayPal"
 msgstr "PayPal ile destek ol"

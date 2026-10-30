@@ -22,7 +22,7 @@ fn main() {
         res.set("ProductName", "Mac Downloader");
         res.set("FileDescription", "Mac Downloader");
         res.set("CompanyName", "Ezoo");
-        res.set("LegalCopyright", "Copyright (C) 2026 Ahmed Ezzat");
+        res.set("LegalCopyright", "Copyright (C) 2026 jawad depp");
         res.set("OriginalFilename", "EzooDownload.exe");
         res.set("InternalName", "EzooDownload");
         res.set("ProductVersion", version);

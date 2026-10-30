@@ -430,7 +430,7 @@ AR = {
     "Copy folder path": "نسخ مسار المجلد",
     "Language": "اللغة",
     "Version {}": "الإصدار {}",
-    "Coded by Ahmed Ezzat": "Coded by Ahmed Ezzat",
+    "Coded by jawad depp": "Coded by jawad depp",
     "Check for updates": "البحث عن تحديثات",
     "Download with the browser": "التحميل عبر المتصفح",
     "Forest green": "أخضر الغابة",

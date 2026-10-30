@@ -22,7 +22,7 @@ AppId={{F5837666-2925-4FD9-8CE9-728BE9C5D7E4}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
-AppPublisher=Ahmed Ezzat
+AppPublisher=jawad depp
 ; The folder keeps its first-release name so updates install in place.
 DefaultDirName={localappdata}\Programs\Ezoo Download
 DefaultGroupName={#MyAppName}
@@ -39,7 +39,7 @@ VersionInfoCompany=Ezoo
 VersionInfoDescription=Mac Downloader Setup
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-VersionInfoCopyright=Copyright (C) 2026 Ahmed Ezzat
+VersionInfoCopyright=Copyright (C) 2026 jawad depp
 AppPublisherURL=https://www.youtube.com/@Ezoo-Tech
 UninstallDisplayName={#MyAppName}
 Compression=lzma2/max
